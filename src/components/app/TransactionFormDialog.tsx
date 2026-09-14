@@ -22,17 +22,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { Account } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
+import { useDebitCards } from "@/hooks/useDebitCards";
 import { useCreateTransaction, useUpdateTransaction } from "@/hooks/useTransactions";
 import { maskMoneyInput, parseMoneyInput } from "@/lib/money";
 import {
   type FinancialTransaction,
+  type DirectTransactionType,
   type TransactionStatus,
-  type TransactionType,
   localToday,
 } from "@/lib/transactions";
 import { cn } from "@/lib/utils";
 
-const TYPE_OPTIONS: { value: TransactionType; label: string }[] = [
+const TYPE_OPTIONS: { value: DirectTransactionType; label: string }[] = [
   { value: "expense", label: "Despesa" },
   { value: "income", label: "Receita" },
   { value: "transfer", label: "Transferência" },
@@ -55,17 +56,19 @@ export function TransactionFormDialog({
 }) {
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
-  const [type, setType] = useState<TransactionType>("expense");
+  const [type, setType] = useState<DirectTransactionType>("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("0,00");
   const [categoryId, setCategoryId] = useState("");
   const [accountId, setAccountId] = useState("");
   const [destinationAccountId, setDestinationAccountId] = useState("");
+  const [debitCardId, setDebitCardId] = useState("none");
   const [date, setDate] = useState(localToday());
   const [status, setStatus] = useState<TransactionStatus>("confirmed");
   const [notes, setNotes] = useState("");
   const categoryType = type === "income" ? "income" : "expense";
   const categories = useCategories(categoryType);
+  const debitCards = useDebitCards();
 
   const availableAccounts = useMemo(
     () =>
@@ -75,7 +78,10 @@ export function TransactionFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    const nextType = transaction?.type ?? "expense";
+    const nextType =
+      transaction?.type === "income" || transaction?.type === "transfer"
+        ? transaction.type
+        : "expense";
     setType(nextType);
     setDescription(transaction?.description ?? "");
     setAmount(transaction ? moneyInputFromNumber(transaction.amount) : "0,00");
@@ -84,6 +90,7 @@ export function TransactionFormDialog({
       transaction?.account_id ?? accounts.find((account) => !account.is_archived)?.id ?? "",
     );
     setDestinationAccountId(transaction?.destination_account_id ?? "");
+    setDebitCardId(transaction?.debit_card_id ?? "none");
     setDate(transaction?.transaction_date ?? localToday());
     setStatus(transaction?.status ?? "confirmed");
     setNotes(transaction?.notes ?? "");
@@ -91,10 +98,11 @@ export function TransactionFormDialog({
 
   const saving = createTransaction.isPending || updateTransaction.isPending;
 
-  const changeType = (nextType: TransactionType) => {
+  const changeType = (nextType: DirectTransactionType) => {
     setType(nextType);
     setCategoryId("");
     setDestinationAccountId("");
+    setDebitCardId("none");
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -134,6 +142,7 @@ export function TransactionFormDialog({
       category_id: type === "transfer" ? null : categoryId,
       account_id: accountId,
       destination_account_id: type === "transfer" ? destinationAccountId : null,
+      debit_card_id: type === "expense" && debitCardId !== "none" ? debitCardId : null,
       transaction_date: date,
       status,
       notes: notes.trim() || null,
@@ -235,7 +244,18 @@ export function TransactionFormDialog({
             <Label htmlFor="source-account">
               {type === "transfer" ? "Conta de origem" : "Conta"}
             </Label>
-            <Select value={accountId} onValueChange={setAccountId}>
+            <Select
+              value={accountId}
+              onValueChange={(nextAccountId) => {
+                setAccountId(nextAccountId);
+                const selectedDebitCard = (debitCards.data ?? []).find(
+                  (card) => card.id === debitCardId,
+                );
+                if (selectedDebitCard && selectedDebitCard.account_id !== nextAccountId) {
+                  setDebitCardId("none");
+                }
+              }}
+            >
               <SelectTrigger id="source-account" className="min-h-11">
                 <SelectValue placeholder="Selecione uma conta" />
               </SelectTrigger>
@@ -248,6 +268,30 @@ export function TransactionFormDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {type === "expense" ? (
+            <div className="space-y-2">
+              <Label htmlFor="transaction-debit-card">Pagamento no débito (opcional)</Label>
+              <Select value={debitCardId} onValueChange={setDebitCardId}>
+                <SelectTrigger id="transaction-debit-card" className="min-h-11">
+                  <SelectValue placeholder="Selecione um cartão" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Usar saldo da conta</SelectItem>
+                  {(debitCards.data ?? [])
+                    .filter((card) => !card.is_archived && card.account_id === accountId)
+                    .map((card) => (
+                      <SelectItem key={card.id} value={card.id}>
+                        {card.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                O valor sai da conta selecionada imediatamente.
+              </p>
+            </div>
+          ) : null}
 
           {type === "transfer" ? (
             <div className="space-y-2">
