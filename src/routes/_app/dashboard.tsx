@@ -13,6 +13,7 @@ import { toBalanceMap, useAccountBalances } from "@/hooks/useAccountBalances";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreditCards } from "@/hooks/useCreditCards";
+import { useDebitCards } from "@/hooks/useDebitCards";
 import { useProfile } from "@/hooks/useProfile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateMonthlySummary } from "@/lib/transactions";
@@ -38,6 +39,7 @@ function DashboardPage() {
   const transactions = useTransactions();
   const categories = useCategories();
   const cards = useCreditCards();
+  const debitCards = useDebitCards();
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -51,13 +53,18 @@ function DashboardPage() {
     () => new Map((cards.data ?? []).map((card) => [card.id, card.name])),
     [cards.data],
   );
+  const debitCardMap = useMemo(
+    () => new Map((debitCards.data ?? []).map((card) => [card.id, card.name])),
+    [debitCards.data],
+  );
 
   if (
     accounts.isLoading ||
     balances.isLoading ||
     transactions.isLoading ||
     categories.isLoading ||
-    cards.isLoading
+    cards.isLoading ||
+    debitCards.isLoading
   ) {
     return <LoadingState label="Carregando seu resumo..." />;
   }
@@ -66,7 +73,8 @@ function DashboardPage() {
     balances.isError ||
     transactions.isError ||
     categories.isError ||
-    cards.isError
+    cards.isError ||
+    debitCards.isError
   ) {
     return (
       <ErrorState
@@ -76,6 +84,7 @@ function DashboardPage() {
           transactions.refetch();
           categories.refetch();
           cards.refetch();
+          debitCards.refetch();
         }}
       />
     );
@@ -210,6 +219,11 @@ function DashboardPage() {
                 }
                 cardName={
                   transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
+                }
+                debitCardName={
+                  transaction.debit_card_id
+                    ? debitCardMap.get(transaction.debit_card_id)
+                    : undefined
                 }
               />
             ))}
