@@ -12,6 +12,7 @@ import { brand } from "@/config/brand";
 import { toBalanceMap, useAccountBalances } from "@/hooks/useAccountBalances";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
+import { useCreditCards } from "@/hooks/useCreditCards";
 import { useProfile } from "@/hooks/useProfile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { calculateMonthlySummary } from "@/lib/transactions";
@@ -36,6 +37,7 @@ function DashboardPage() {
   const balances = useAccountBalances();
   const transactions = useTransactions();
   const categories = useCategories();
+  const cards = useCreditCards();
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -45,11 +47,27 @@ function DashboardPage() {
     () => new Map((categories.data ?? []).map((category) => [category.id, category.name])),
     [categories.data],
   );
+  const cardMap = useMemo(
+    () => new Map((cards.data ?? []).map((card) => [card.id, card.name])),
+    [cards.data],
+  );
 
-  if (accounts.isLoading || balances.isLoading || transactions.isLoading || categories.isLoading) {
+  if (
+    accounts.isLoading ||
+    balances.isLoading ||
+    transactions.isLoading ||
+    categories.isLoading ||
+    cards.isLoading
+  ) {
     return <LoadingState label="Carregando seu resumo..." />;
   }
-  if (accounts.isError || balances.isError || transactions.isError || categories.isError) {
+  if (
+    accounts.isError ||
+    balances.isError ||
+    transactions.isError ||
+    categories.isError ||
+    cards.isError
+  ) {
     return (
       <ErrorState
         onRetry={() => {
@@ -57,6 +75,7 @@ function DashboardPage() {
           balances.refetch();
           transactions.refetch();
           categories.refetch();
+          cards.refetch();
         }}
       />
     );
@@ -178,7 +197,9 @@ function DashboardPage() {
               <TransactionItem
                 key={transaction.id}
                 transaction={transaction}
-                accountName={accountMap.get(transaction.account_id)}
+                accountName={
+                  transaction.account_id ? accountMap.get(transaction.account_id) : undefined
+                }
                 destinationAccountName={
                   transaction.destination_account_id
                     ? accountMap.get(transaction.destination_account_id)
@@ -186,6 +207,9 @@ function DashboardPage() {
                 }
                 categoryName={
                   transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
+                }
+                cardName={
+                  transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
                 }
               />
             ))}
