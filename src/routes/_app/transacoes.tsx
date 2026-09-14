@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { PageHeader } from "@/components/app/PageHeader";
+import { CardExpenseDialog, type CardPurchaseDraft } from "@/components/app/CardExpenseDialog";
 import { TransactionFormDialog } from "@/components/app/TransactionFormDialog";
 import { TransactionItem } from "@/components/app/TransactionItem";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
@@ -47,6 +48,30 @@ const FILTERS: { value: "all" | TransactionType; label: string }[] = [
   { value: "transfer", label: "Transferências" },
 ];
 
+function toCardPurchaseDraft(
+  transaction: FinancialTransaction,
+  allTransactions: FinancialTransaction[],
+): CardPurchaseDraft | null {
+  if (!transaction.credit_card_id || !transaction.category_id) return null;
+  const purchases = transaction.installment_group_id
+    ? allTransactions.filter(
+        (item) => item.installment_group_id === transaction.installment_group_id,
+      )
+    : [transaction];
+  const firstPurchase = purchases.find((item) => item.installment_number === 1) ?? transaction;
+
+  return {
+    transactionId: transaction.id,
+    creditCardId: transaction.credit_card_id,
+    description: firstPurchase.description.replace(/ \(\d+\/\d+\)$/, ""),
+    amount: purchases.reduce((total, item) => total + Number(item.amount), 0),
+    categoryId: transaction.category_id,
+    transactionDate: firstPurchase.transaction_date,
+    totalInstallments: transaction.total_installments ?? 1,
+    notes: firstPurchase.notes,
+  };
+}
+
 function TransactionsPage() {
   const search = Route.useSearch();
   const transactions = useTransactions();
@@ -61,6 +86,7 @@ function TransactionsPage() {
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
   const [cardPurchaseTarget, setCardPurchaseTarget] = useState<FinancialTransaction | null>(null);
+  const [editingCardPurchase, setEditingCardPurchase] = useState<CardPurchaseDraft | null>(null);
 
   useEffect(() => {
     if (search.nova) {
@@ -130,6 +156,11 @@ function TransactionsPage() {
   const openEdit = (transaction: FinancialTransaction) => {
     setEditing(transaction);
     setFormOpen(true);
+  };
+
+  const openEditCardPurchase = (transaction: FinancialTransaction) => {
+    const purchase = toCardPurchaseDraft(transaction, transactionList);
+    if (purchase) setEditingCardPurchase(purchase);
   };
 
   const removeTransaction = async () => {
@@ -260,6 +291,7 @@ function TransactionsPage() {
                   onEdit={openEdit}
                   onDelete={setDeleteTarget}
                   onCancelCardPurchase={setCardPurchaseTarget}
+                  onEditCardPurchase={openEditCardPurchase}
                 />
               ))}
             </div>
@@ -284,6 +316,13 @@ function TransactionsPage() {
         onOpenChange={setFormOpen}
         transaction={editing}
         accounts={accounts.data ?? []}
+      />
+
+      <CardExpenseDialog
+        open={Boolean(editingCardPurchase)}
+        onOpenChange={(open) => !open && setEditingCardPurchase(null)}
+        cards={cards.data ?? []}
+        purchase={editingCardPurchase}
       />
 
       <AlertDialog
