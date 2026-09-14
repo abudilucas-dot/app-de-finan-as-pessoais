@@ -25,6 +25,7 @@ export function useTransactions() {
 function invalidateFinancialData(queryClient: ReturnType<typeof useQueryClient>, userId?: string) {
   queryClient.invalidateQueries({ queryKey: ["transactions", userId] });
   queryClient.invalidateQueries({ queryKey: ["account_balances", userId] });
+  queryClient.invalidateQueries({ queryKey: ["budget_summaries", userId] });
 }
 
 export function useCreateTransaction() {
