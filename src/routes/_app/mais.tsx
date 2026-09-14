@@ -9,8 +9,8 @@ export const Route = createFileRoute("/_app/mais")({
 
 const links = [
   { to: "/contas", label: "Contas", description: "Gerencie bancos e carteiras", icon: Wallet },
-  { to: "/cartoes", label: "Cartões", description: "Em construção", icon: CreditCard },
-  { to: "/metas", label: "Metas", description: "Em construção", icon: Target },
+  { to: "/cartoes", label: "Cartões", description: "Controle limites, faturas e parcelas", icon: CreditCard },
+  { to: "/metas", label: "Metas", description: "Acompanhe objetivos e aportes", icon: Target },
   {
     to: "/configuracoes",
     label: "Configurações",
