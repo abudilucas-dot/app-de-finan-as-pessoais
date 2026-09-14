@@ -200,6 +200,60 @@ export type Database = {
           },
         ];
       };
+      debit_cards: {
+        Row: {
+          account_id: string;
+          brand: string | null;
+          color: string | null;
+          created_at: string;
+          id: string;
+          institution: string | null;
+          is_archived: boolean;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          account_id: string;
+          brand?: string | null;
+          color?: string | null;
+          created_at?: string;
+          id?: string;
+          institution?: string | null;
+          is_archived?: boolean;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string;
+          brand?: string | null;
+          color?: string | null;
+          created_at?: string;
+          id?: string;
+          institution?: string | null;
+          is_archived?: boolean;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debit_cards_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "debit_cards_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -246,12 +300,16 @@ export type Database = {
           category_id: string | null;
           created_at: string;
           credit_card_id: string | null;
+          debit_card_id: string | null;
           description: string;
           destination_account_id: string | null;
           id: string;
+          installment_group_id: string | null;
+          installment_number: number | null;
           invoice_id: string | null;
           notes: string | null;
           status: string;
+          total_installments: number | null;
           transaction_date: string;
           type: string;
           updated_at: string;
@@ -263,12 +321,16 @@ export type Database = {
           category_id?: string | null;
           created_at?: string;
           credit_card_id?: string | null;
+          debit_card_id?: string | null;
           description: string;
           destination_account_id?: string | null;
           id?: string;
+          installment_group_id?: string | null;
+          installment_number?: number | null;
           invoice_id?: string | null;
           notes?: string | null;
           status?: string;
+          total_installments?: number | null;
           transaction_date?: string;
           type: string;
           updated_at?: string;
@@ -280,12 +342,16 @@ export type Database = {
           category_id?: string | null;
           created_at?: string;
           credit_card_id?: string | null;
+          debit_card_id?: string | null;
           description?: string;
           destination_account_id?: string | null;
           id?: string;
+          installment_group_id?: string | null;
+          installment_number?: number | null;
           invoice_id?: string | null;
           notes?: string | null;
           status?: string;
+          total_installments?: number | null;
           transaction_date?: string;
           type?: string;
           updated_at?: string;
@@ -325,6 +391,13 @@ export type Database = {
             columns: ["credit_card_id"];
             isOneToOne: false;
             referencedRelation: "credit_cards";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transactions_debit_card_id_fkey";
+            columns: ["debit_card_id"];
+            isOneToOne: false;
+            referencedRelation: "debit_cards";
             referencedColumns: ["id"];
           },
           {
@@ -423,12 +496,16 @@ export type Database = {
           category_id: string | null;
           created_at: string;
           credit_card_id: string | null;
+          debit_card_id: string | null;
           description: string;
           destination_account_id: string | null;
           id: string;
+          installment_group_id: string | null;
+          installment_number: number | null;
           invoice_id: string | null;
           notes: string | null;
           status: string;
+          total_installments: number | null;
           transaction_date: string;
           type: string;
           updated_at: string;
@@ -439,6 +516,44 @@ export type Database = {
           to: "transactions";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      create_card_installment_expense: {
+        Args: {
+          p_amount: number;
+          p_category_id: string;
+          p_credit_card_id: string;
+          p_description: string;
+          p_notes?: string;
+          p_total_installments?: number;
+          p_transaction_date: string;
+        };
+        Returns: {
+          account_id: string | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          credit_card_id: string | null;
+          debit_card_id: string | null;
+          description: string;
+          destination_account_id: string | null;
+          id: string;
+          installment_group_id: string | null;
+          installment_number: number | null;
+          invoice_id: string | null;
+          notes: string | null;
+          status: string;
+          total_installments: number | null;
+          transaction_date: string;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "transactions";
+          isOneToOne: false;
+          isSetofReturn: true;
         };
       };
       pay_credit_card_invoice: {
@@ -453,12 +568,16 @@ export type Database = {
           category_id: string | null;
           created_at: string;
           credit_card_id: string | null;
+          debit_card_id: string | null;
           description: string;
           destination_account_id: string | null;
           id: string;
+          installment_group_id: string | null;
+          installment_number: number | null;
           invoice_id: string | null;
           notes: string | null;
           status: string;
+          total_installments: number | null;
           transaction_date: string;
           type: string;
           updated_at: string;
