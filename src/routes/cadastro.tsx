@@ -6,6 +6,7 @@ import { AuthShell } from "@/components/app/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { emailConfirmationRedirectUrl } from "@/config/authRedirect";
 import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,17 +49,22 @@ function SignUpPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+        emailRedirectTo: emailConfirmationRedirectUrl,
         data: { full_name: fullName.trim() },
       },
     });
     setSubmitting(false);
 
     if (error) {
+      const message = error.message.toLowerCase();
       toast.error(
-        error.message.toLowerCase().includes("registered")
-          ? "Este e-mail já possui uma conta."
-          : "Não foi possível criar sua conta. Tente novamente.",
+        message.includes("registered")
+          ? "Este e-mail já possui uma conta. Use a tela de login."
+          : message.includes("redirect")
+            ? "Abra o endereço oficial do aplicativo e tente novamente."
+            : message.includes("rate limit")
+              ? "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente."
+              : "Não foi possível criar sua conta. Tente novamente.",
       );
       return;
     }
@@ -77,7 +83,7 @@ function SignUpPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+      options: { emailRedirectTo: emailConfirmationRedirectUrl },
     });
     setResendingConfirmation(false);
 
