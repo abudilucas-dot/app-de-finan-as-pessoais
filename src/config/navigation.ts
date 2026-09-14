@@ -23,7 +23,7 @@ export const primaryNav: NavItem[] = [
   { label: "Visão geral", to: "/dashboard", icon: LayoutDashboard, ready: true },
   { label: "Transações", to: "/transacoes", icon: ArrowLeftRight, ready: true },
   { label: "Contas", to: "/contas", icon: Wallet, ready: true },
-  { label: "Cartões", to: "/cartoes", icon: CreditCard, ready: false },
+  { label: "Cartões", to: "/cartoes", icon: CreditCard, ready: true },
   { label: "Orçamentos", to: "/orcamentos", icon: PiggyBank, ready: false },
   { label: "Metas", to: "/metas", icon: Target, ready: false },
   { label: "Calendário", to: "/calendario", icon: CalendarDays, ready: false },
