@@ -10,15 +10,30 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
+import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
+import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
+import { Route as AppContasRouteImport } from './routes/_app/contas'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppMaisRouteImport } from './routes/_app/mais'
+import { Route as AppMetasRouteImport } from './routes/_app/metas'
+import { Route as AppOrcamentosRouteImport } from './routes/_app/orcamentos'
+import { Route as AppRelatoriosRouteImport } from './routes/_app/relatorios'
+import { Route as AppTransacoesRouteImport } from './routes/_app/transacoes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -46,6 +61,56 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppCalendarioRoute = AppCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCartoesRoute = AppCartoesRouteImport.update({
+  id: '/cartoes',
+  path: '/cartoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppContasRoute = AppContasRouteImport.update({
+  id: '/contas',
+  path: '/contas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMaisRoute = AppMaisRouteImport.update({
+  id: '/mais',
+  path: '/mais',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMetasRoute = AppMetasRouteImport.update({
+  id: '/metas',
+  path: '/metas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrcamentosRoute = AppOrcamentosRouteImport.update({
+  id: '/orcamentos',
+  path: '/orcamentos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTransacoesRoute = AppTransacoesRouteImport.update({
+  id: '/transacoes',
+  path: '/transacoes',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +119,16 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/calendario': typeof AppCalendarioRoute
+  '/cartoes': typeof AppCartoesRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
+  '/contas': typeof AppContasRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/mais': typeof AppMaisRoute
+  '/metas': typeof AppMetasRoute
+  '/orcamentos': typeof AppOrcamentosRoute
+  '/relatorios': typeof AppRelatoriosRoute
+  '/transacoes': typeof AppTransacoesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,15 +137,36 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/calendario': typeof AppCalendarioRoute
+  '/cartoes': typeof AppCartoesRoute
+  '/configuracoes': typeof AppConfiguracoesRoute
+  '/contas': typeof AppContasRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/mais': typeof AppMaisRoute
+  '/metas': typeof AppMetasRoute
+  '/orcamentos': typeof AppOrcamentosRoute
+  '/relatorios': typeof AppRelatoriosRoute
+  '/transacoes': typeof AppTransacoesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/_app/calendario': typeof AppCalendarioRoute
+  '/_app/cartoes': typeof AppCartoesRoute
+  '/_app/configuracoes': typeof AppConfiguracoesRoute
+  '/_app/contas': typeof AppContasRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/mais': typeof AppMaisRoute
+  '/_app/metas': typeof AppMetasRoute
+  '/_app/orcamentos': typeof AppOrcamentosRoute
+  '/_app/relatorios': typeof AppRelatoriosRoute
+  '/_app/transacoes': typeof AppTransacoesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +177,16 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/calendario'
+    | '/cartoes'
+    | '/configuracoes'
+    | '/contas'
+    | '/dashboard'
+    | '/mais'
+    | '/metas'
+    | '/orcamentos'
+    | '/relatorios'
+    | '/transacoes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,18 +195,40 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/calendario'
+    | '/cartoes'
+    | '/configuracoes'
+    | '/contas'
+    | '/dashboard'
+    | '/mais'
+    | '/metas'
+    | '/orcamentos'
+    | '/relatorios'
+    | '/transacoes'
   id:
     | '__root__'
     | '/'
+    | '/_app'
     | '/cadastro'
     | '/login'
     | '/onboarding'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/_app/calendario'
+    | '/_app/cartoes'
+    | '/_app/configuracoes'
+    | '/_app/contas'
+    | '/_app/dashboard'
+    | '/_app/mais'
+    | '/_app/metas'
+    | '/_app/orcamentos'
+    | '/_app/relatorios'
+    | '/_app/transacoes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -115,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -152,11 +287,110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/calendario': {
+      id: '/_app/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AppCalendarioRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cartoes': {
+      id: '/_app/cartoes'
+      path: '/cartoes'
+      fullPath: '/cartoes'
+      preLoaderRoute: typeof AppCartoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/configuracoes': {
+      id: '/_app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/contas': {
+      id: '/_app/contas'
+      path: '/contas'
+      fullPath: '/contas'
+      preLoaderRoute: typeof AppContasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mais': {
+      id: '/_app/mais'
+      path: '/mais'
+      fullPath: '/mais'
+      preLoaderRoute: typeof AppMaisRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/metas': {
+      id: '/_app/metas'
+      path: '/metas'
+      fullPath: '/metas'
+      preLoaderRoute: typeof AppMetasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orcamentos': {
+      id: '/_app/orcamentos'
+      path: '/orcamentos'
+      fullPath: '/orcamentos'
+      preLoaderRoute: typeof AppOrcamentosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/relatorios': {
+      id: '/_app/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/transacoes': {
+      id: '/_app/transacoes'
+      path: '/transacoes'
+      fullPath: '/transacoes'
+      preLoaderRoute: typeof AppTransacoesRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppCalendarioRoute: typeof AppCalendarioRoute
+  AppCartoesRoute: typeof AppCartoesRoute
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppContasRoute: typeof AppContasRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppMaisRoute: typeof AppMaisRoute
+  AppMetasRoute: typeof AppMetasRoute
+  AppOrcamentosRoute: typeof AppOrcamentosRoute
+  AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppTransacoesRoute: typeof AppTransacoesRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppCalendarioRoute: AppCalendarioRoute,
+  AppCartoesRoute: AppCartoesRoute,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppContasRoute: AppContasRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppMaisRoute: AppMaisRoute,
+  AppMetasRoute: AppMetasRoute,
+  AppOrcamentosRoute: AppOrcamentosRoute,
+  AppRelatoriosRoute: AppRelatoriosRoute,
+  AppTransacoesRoute: AppTransacoesRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,

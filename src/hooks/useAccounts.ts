@@ -15,6 +15,7 @@ export type Account = {
   color: string | null;
   is_archived: boolean;
   created_at: string;
+  updated_at: string;
 };
 
 export type AccountInput = {
@@ -72,6 +73,7 @@ export function useUpdateAccount() {
         .from("accounts")
         .update(values)
         .eq("id", id)
+        .eq("user_id", user!.id)
         .select()
         .single();
       if (error) throw error;

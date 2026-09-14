@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/app/PageHeader";
 export function UnderConstruction({ title, description }: { title: string; description?: string }) {
   return (
     <div className="space-y-6">
-      <PageHeader title={title} description={description} />
+      <PageHeader {...(description ? { description } : {})} title={title} />
       <EmptyState
         icon={Hammer}
         title="Em construção"
