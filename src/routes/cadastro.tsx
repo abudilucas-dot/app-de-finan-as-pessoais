@@ -30,6 +30,7 @@ function SignUpPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/onboarding", replace: true });
@@ -71,20 +72,47 @@ function SignUpPage() {
     navigate({ to: "/onboarding", replace: true });
   };
 
+  const handleResendConfirmation = async () => {
+    setResendingConfirmation(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+    });
+    setResendingConfirmation(false);
+
+    if (error) {
+      toast.error("Não foi possível reenviar agora. Tente novamente em alguns minutos.");
+      return;
+    }
+
+    toast.success("Se sua conta ainda precisar de confirmação, enviamos um novo link.");
+  };
+
   if (emailSent) {
     return (
       <AuthShell
         title="Confirme seu e-mail"
-        description={`Enviamos um link de confirmação para ${email}. Abra o link para ativar sua conta. Em seguida, você será direcionado para o login.`}
+        description={`Se este e-mail ainda precisar de confirmação, enviamos um link para ${email}. Depois da confirmação, você será direcionado para o login.`}
         footer={
           <Link to="/login" className="font-medium text-primary hover:underline">
-            Voltar para o login
+            Ir para o login
           </Link>
         }
       >
-        <p className="text-sm text-muted-foreground">
-          Não encontrou o e-mail? Verifique a caixa de spam ou tente novamente em alguns minutos.
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Já confirmou este e-mail? Entre com sua senha. Se esqueceu a senha, use a recuperação de acesso.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button type="button" variant="outline" onClick={handleResendConfirmation} disabled={resendingConfirmation}>
+              {resendingConfirmation ? "Reenviando..." : "Reenviar confirmação"}
+            </Button>
+            <Button type="button" variant="ghost" asChild>
+              <Link to="/recuperar-senha">Esqueci minha senha</Link>
+            </Button>
+          </div>
+        </div>
       </AuthShell>
     );
   }
