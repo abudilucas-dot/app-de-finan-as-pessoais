@@ -22,6 +22,7 @@ export function TransactionItem({
   debitCardName,
   onEdit,
   onDelete,
+  onCancelCardPurchase,
 }: {
   transaction: FinancialTransaction;
   accountName?: string | undefined;
@@ -31,6 +32,7 @@ export function TransactionItem({
   debitCardName?: string | undefined;
   onEdit?: (transaction: FinancialTransaction) => void;
   onDelete?: (transaction: FinancialTransaction) => void;
+  onCancelCardPurchase?: (transaction: FinancialTransaction) => void;
 }) {
   const Icon =
     transaction.type === "income"
@@ -58,6 +60,9 @@ export function TransactionItem({
           : transaction.debit_card_id
             ? `${categoryName ?? "Sem categoria"} · ${debitCardName ?? "Cartão de débito"}`
             : `${categoryName ?? "Sem categoria"} · ${accountName ?? "Conta"}`;
+  const isCreditCardPurchase = Boolean(
+    transaction.type === "expense" && transaction.credit_card_id && transaction.invoice_id,
+  );
   const managedByCard = Boolean(transaction.credit_card_id || transaction.invoice_id);
 
   return (
@@ -118,6 +123,16 @@ export function TransactionItem({
             size="icon"
             aria-label={`Excluir ${transaction.description}`}
             onClick={() => onDelete(transaction)}
+          >
+            <Trash2 />
+          </Button>
+        ) : null}
+        {onCancelCardPurchase && isCreditCardPurchase ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Cancelar compra no cartão: ${transaction.description}`}
+            onClick={() => onCancelCardPurchase(transaction)}
           >
             <Trash2 />
           </Button>
