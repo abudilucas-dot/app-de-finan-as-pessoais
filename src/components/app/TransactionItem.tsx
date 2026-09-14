@@ -1,4 +1,11 @@
-import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowRightLeft,
+  ArrowUpRight,
+  CreditCard,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { Button } from "@/components/ui/button";
@@ -11,6 +18,7 @@ export function TransactionItem({
   accountName,
   destinationAccountName,
   categoryName,
+  cardName,
   onEdit,
   onDelete,
 }: {
@@ -18,6 +26,7 @@ export function TransactionItem({
   accountName?: string | undefined;
   destinationAccountName?: string | undefined;
   categoryName?: string | undefined;
+  cardName?: string | undefined;
   onEdit?: (transaction: FinancialTransaction) => void;
   onDelete?: (transaction: FinancialTransaction) => void;
 }) {
@@ -26,17 +35,26 @@ export function TransactionItem({
       ? ArrowDownLeft
       : transaction.type === "expense"
         ? ArrowUpRight
-        : ArrowRightLeft;
+        : transaction.type === "card_payment"
+          ? CreditCard
+          : ArrowRightLeft;
   const signedAmount =
     transaction.type === "income"
       ? transaction.amount
       : transaction.type === "expense"
         ? -transaction.amount
-        : transaction.amount;
+        : transaction.type === "card_payment"
+          ? -transaction.amount
+          : transaction.amount;
   const detail =
     transaction.type === "transfer"
       ? `${accountName ?? "Conta"} → ${destinationAccountName ?? "Conta"}`
-      : `${categoryName ?? "Sem categoria"} · ${accountName ?? "Conta"}`;
+      : transaction.type === "card_payment"
+        ? `${accountName ?? "Conta"} · Pagamento de fatura`
+        : transaction.credit_card_id
+          ? `${categoryName ?? "Sem categoria"} · ${cardName ?? "Cartão"}`
+          : `${categoryName ?? "Sem categoria"} · ${accountName ?? "Conta"}`;
+  const managedByCard = Boolean(transaction.credit_card_id || transaction.invoice_id);
 
   return (
     <article className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b py-4 last:border-b-0 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
@@ -45,6 +63,7 @@ export function TransactionItem({
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
           transaction.type === "income" && "bg-positive/10 text-positive",
           transaction.type === "expense" && "bg-negative/10 text-negative",
+          transaction.type === "card_payment" && "bg-primary/10 text-primary",
           transaction.type === "transfer" && "bg-accent text-accent-foreground",
         )}
       >
@@ -79,7 +98,7 @@ export function TransactionItem({
             transaction.status === "cancelled" && "line-through opacity-60",
           )}
         />
-        {onEdit ? (
+        {onEdit && !managedByCard ? (
           <Button
             variant="ghost"
             size="icon"
@@ -89,7 +108,7 @@ export function TransactionItem({
             <Pencil />
           </Button>
         ) : null}
-        {onDelete ? (
+        {onDelete && !managedByCard ? (
           <Button
             variant="ghost"
             size="icon"
