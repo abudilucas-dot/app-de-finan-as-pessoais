@@ -138,6 +138,20 @@ export function useCreateCardExpense() {
   });
 }
 
+export function useDeleteCreditCardPurchase() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase.rpc("delete_credit_card_purchase", {
+        p_transaction_id: transactionId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
+  });
+}
+
 export function usePayCreditCardInvoice() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
