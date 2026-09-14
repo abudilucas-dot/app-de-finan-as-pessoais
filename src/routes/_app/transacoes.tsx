@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreditCards } from "@/hooks/useCreditCards";
+import { useCreditCards, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
 import { useDebitCards } from "@/hooks/useDebitCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
 import {
@@ -55,10 +55,12 @@ function TransactionsPage() {
   const cards = useCreditCards();
   const debitCards = useDebitCards();
   const deleteTransaction = useDeleteTransaction();
+  const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
+  const [cardPurchaseTarget, setCardPurchaseTarget] = useState<FinancialTransaction | null>(null);
 
   useEffect(() => {
     if (search.nova) {
@@ -138,6 +140,25 @@ function TransactionsPage() {
       setDeleteTarget(null);
     } catch {
       toast.error("Não foi possível excluir a movimentação.");
+    }
+  };
+
+  const cancelCardPurchase = async () => {
+    if (!cardPurchaseTarget) return;
+    try {
+      await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
+      toast.success(
+        (cardPurchaseTarget.total_installments ?? 1) > 1
+          ? "Compra parcelada cancelada. Todas as parcelas foram removidas."
+          : "Compra no cartão cancelada.",
+      );
+      setCardPurchaseTarget(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message.includes("has been paid")
+          ? "Não é possível cancelar: uma das faturas desta compra já foi paga."
+          : "Não foi possível cancelar a compra no cartão.",
+      );
     }
   };
 
@@ -238,6 +259,7 @@ function TransactionsPage() {
                   }
                   onEdit={openEdit}
                   onDelete={setDeleteTarget}
+                  onCancelCardPurchase={setCardPurchaseTarget}
                 />
               ))}
             </div>
@@ -283,6 +305,33 @@ function TransactionsPage() {
               onClick={removeTransaction}
             >
               {deleteTransaction.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(cardPurchaseTarget)}
+        onOpenChange={(open) => !open && setCardPurchaseTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar esta compra no cartão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {(cardPurchaseTarget?.total_installments ?? 1) > 1
+                ? `Todas as ${cardPurchaseTarget?.total_installments} parcelas serão removidas, e o limite será recalculado.`
+                : "A compra será removida, e o limite será recalculado."}
+              {" Esta ação não poderá ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCreditCardPurchase.isPending}
+              onClick={cancelCardPurchase}
+            >
+              {deleteCreditCardPurchase.isPending ? "Cancelando..." : "Cancelar compra"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
