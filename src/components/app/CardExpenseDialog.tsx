@@ -45,6 +45,7 @@ export function CardExpenseDialog({
   const [amount, setAmount] = useState("0,00");
   const [categoryId, setCategoryId] = useState("");
   const [date, setDate] = useState(localToday());
+  const [totalInstallments, setTotalInstallments] = useState("1");
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export function CardExpenseDialog({
     setAmount("0,00");
     setCategoryId("");
     setDate(localToday());
+    setTotalInstallments("1");
     setNotes("");
   }, [availableCards, defaultCard?.id, open]);
 
@@ -64,6 +66,10 @@ export function CardExpenseDialog({
     if (!description.trim()) return toast.error("Informe uma descrição.");
     if (numericAmount <= 0) return toast.error("Informe um valor maior que zero.");
     if (!categoryId) return toast.error("Selecione uma categoria.");
+    const installments = Number(totalInstallments);
+    if (!Number.isInteger(installments) || installments < 1 || installments > 60) {
+      return toast.error("Informe entre 1 e 60 parcelas.");
+    }
     try {
       await createExpense.mutateAsync({
         creditCardId: cardId,
@@ -71,9 +77,14 @@ export function CardExpenseDialog({
         amount: numericAmount,
         categoryId,
         transactionDate: date,
+        totalInstallments: installments,
         notes,
       });
-      toast.success("Compra no cartão registrada.");
+      toast.success(
+        installments > 1
+          ? `Compra registrada em ${installments} parcelas.`
+          : "Compra no cartão registrada.",
+      );
       onOpenChange(false);
     } catch (error) {
       toast.error(
@@ -122,7 +133,7 @@ export function CardExpenseDialog({
               placeholder="Ex.: Mercado"
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="card-expense-amount">Valor</Label>
               <div className="relative">
@@ -147,6 +158,21 @@ export function CardExpenseDialog({
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="card-expense-installments">Parcelas</Label>
+              <Input
+                id="card-expense-installments"
+                type="number"
+                min="1"
+                max="60"
+                inputMode="numeric"
+                value={totalInstallments}
+                onChange={(e) => setTotalInstallments(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                O limite usa o valor total; cada parcela vai para a fatura correta.
+              </p>
             </div>
           </div>
           <div className="space-y-2">
