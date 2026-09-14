@@ -21,24 +21,38 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreateCardExpense } from "@/hooks/useCreditCards";
+import { useCreateCardExpense, useReplaceCreditCardPurchase } from "@/hooks/useCreditCards";
 import type { CreditCard } from "@/lib/creditCards";
 import { maskMoneyInput, parseMoneyInput } from "@/lib/money";
 import { localToday } from "@/lib/transactions";
+
+export type CardPurchaseDraft = {
+  transactionId: string;
+  creditCardId: string;
+  description: string;
+  amount: number;
+  categoryId: string;
+  transactionDate: string;
+  totalInstallments: number;
+  notes: string | null;
+};
 
 export function CardExpenseDialog({
   open,
   onOpenChange,
   cards,
   defaultCard,
+  purchase,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   cards: CreditCard[];
   defaultCard?: CreditCard | null;
+  purchase?: CardPurchaseDraft | null;
 }) {
   const categories = useCategories("expense");
   const createExpense = useCreateCardExpense();
+  const replaceExpense = useReplaceCreditCardPurchase();
   const availableCards = useMemo(() => cards.filter((card) => !card.is_archived), [cards]);
   const [cardId, setCardId] = useState("");
   const [description, setDescription] = useState("");
@@ -50,14 +64,16 @@ export function CardExpenseDialog({
 
   useEffect(() => {
     if (!open) return;
-    setCardId(defaultCard?.id ?? availableCards[0]?.id ?? "");
-    setDescription("");
-    setAmount("0,00");
-    setCategoryId("");
-    setDate(localToday());
-    setTotalInstallments("1");
-    setNotes("");
-  }, [availableCards, defaultCard?.id, open]);
+    setCardId(purchase?.creditCardId ?? defaultCard?.id ?? availableCards[0]?.id ?? "");
+    setDescription(purchase?.description ?? "");
+    setAmount(purchase ? maskMoneyInput(String(Math.round(purchase.amount * 100))) : "0,00");
+    setCategoryId(purchase?.categoryId ?? "");
+    setDate(purchase?.transactionDate ?? localToday());
+    setTotalInstallments(String(purchase?.totalInstallments ?? 1));
+    setNotes(purchase?.notes ?? "");
+  }, [availableCards, defaultCard?.id, open, purchase]);
+
+  const saving = createExpense.isPending || replaceExpense.isPending;
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -71,7 +87,7 @@ export function CardExpenseDialog({
       return toast.error("Informe entre 1 e 60 parcelas.");
     }
     try {
-      await createExpense.mutateAsync({
+      const values = {
         creditCardId: cardId,
         description: description.trim(),
         amount: numericAmount,
@@ -79,11 +95,18 @@ export function CardExpenseDialog({
         transactionDate: date,
         totalInstallments: installments,
         notes,
-      });
+      };
+      if (purchase) {
+        await replaceExpense.mutateAsync({ transactionId: purchase.transactionId, ...values });
+      } else {
+        await createExpense.mutateAsync(values);
+      }
       toast.success(
-        installments > 1
-          ? `Compra registrada em ${installments} parcelas.`
-          : "Compra no cartão registrada.",
+        purchase
+          ? "Compra no cartão atualizada."
+          : installments > 1
+            ? `Compra registrada em ${installments} parcelas.`
+            : "Compra no cartão registrada.",
       );
       onOpenChange(false);
     } catch (error) {
@@ -99,9 +122,13 @@ export function CardExpenseDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Nova compra no cartão</DialogTitle>
+          <DialogTitle>
+            {purchase ? "Editar compra no cartão" : "Nova compra no cartão"}
+          </DialogTitle>
           <DialogDescription>
-            A despesa conta na data da compra; a quitação da fatura não será uma segunda despesa.
+            {purchase
+              ? "A compra inteira será recalculada com suas parcelas e faturas correspondentes."
+              : "A despesa conta na data da compra; a quitação da fatura não será uma segunda despesa."}
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-5" onSubmit={submit}>
@@ -206,12 +233,12 @@ export function CardExpenseDialog({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createExpense.isPending}
+              disabled={saving}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={createExpense.isPending || availableCards.length === 0}>
-              {createExpense.isPending ? "Registrando..." : "Registrar compra"}
+            <Button type="submit" disabled={saving || availableCards.length === 0}>
+              {saving ? "Salvando..." : purchase ? "Salvar compra" : "Registrar compra"}
             </Button>
           </DialogFooter>
         </form>
