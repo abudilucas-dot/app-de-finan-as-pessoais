@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
+import { useCreditCards } from "@/hooks/useCreditCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
 import {
   type FinancialTransaction,
@@ -50,6 +51,7 @@ function TransactionsPage() {
   const transactions = useTransactions();
   const accounts = useAccounts();
   const categories = useCategories();
+  const cards = useCreditCards();
   const deleteTransaction = useDeleteTransaction();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -71,17 +73,22 @@ function TransactionsPage() {
     () => new Map((categories.data ?? []).map((category) => [category.id, category.name])),
     [categories.data],
   );
+  const cardMap = useMemo(
+    () => new Map((cards.data ?? []).map((card) => [card.id, card.name])),
+    [cards.data],
+  );
 
-  if (transactions.isLoading || accounts.isLoading || categories.isLoading) {
+  if (transactions.isLoading || accounts.isLoading || categories.isLoading || cards.isLoading) {
     return <LoadingState label="Carregando suas movimentações..." />;
   }
-  if (transactions.isError || accounts.isError || categories.isError) {
+  if (transactions.isError || accounts.isError || categories.isError || cards.isError) {
     return (
       <ErrorState
         onRetry={() => {
           transactions.refetch();
           accounts.refetch();
           categories.refetch();
+          cards.refetch();
         }}
       />
     );
@@ -191,7 +198,9 @@ function TransactionsPage() {
                 <TransactionItem
                   key={transaction.id}
                   transaction={transaction}
-                  accountName={accountMap.get(transaction.account_id)}
+                  accountName={
+                    transaction.account_id ? accountMap.get(transaction.account_id) : undefined
+                  }
                   destinationAccountName={
                     transaction.destination_account_id
                       ? accountMap.get(transaction.destination_account_id)
@@ -199,6 +208,9 @@ function TransactionsPage() {
                   }
                   categoryName={
                     transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
+                  }
+                  cardName={
+                    transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
                   }
                   onEdit={openEdit}
                   onDelete={setDeleteTarget}
