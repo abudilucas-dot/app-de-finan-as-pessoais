@@ -28,8 +28,27 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [confirmingEmail, setConfirmingEmail] = useState(false);
 
   useEffect(() => {
+    const isEmailConfirmation = new URLSearchParams(window.location.search).get("confirmed") === "1";
+
+    if (isEmailConfirmation) {
+      let cancelled = false;
+      setConfirmingEmail(true);
+
+      void supabase.auth.signOut({ scope: "local" }).then(() => {
+        if (cancelled) return;
+        window.history.replaceState(window.history.state, "", "/login");
+        setConfirmingEmail(false);
+        toast.success("E-mail confirmado! Entre com sua nova conta.");
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
     if (!loading && user) navigate({ to: "/dashboard", replace: true });
   }, [user, loading, navigate]);
 
