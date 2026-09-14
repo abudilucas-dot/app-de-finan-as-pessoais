@@ -23,6 +23,7 @@ import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreditCards } from "@/hooks/useCreditCards";
+import { useDebitCards } from "@/hooks/useDebitCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
 import {
   type FinancialTransaction,
@@ -52,6 +53,7 @@ function TransactionsPage() {
   const accounts = useAccounts();
   const categories = useCategories();
   const cards = useCreditCards();
+  const debitCards = useDebitCards();
   const deleteTransaction = useDeleteTransaction();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
   const [formOpen, setFormOpen] = useState(false);
@@ -77,11 +79,27 @@ function TransactionsPage() {
     () => new Map((cards.data ?? []).map((card) => [card.id, card.name])),
     [cards.data],
   );
+  const debitCardMap = useMemo(
+    () => new Map((debitCards.data ?? []).map((card) => [card.id, card.name])),
+    [debitCards.data],
+  );
 
-  if (transactions.isLoading || accounts.isLoading || categories.isLoading || cards.isLoading) {
+  if (
+    transactions.isLoading ||
+    accounts.isLoading ||
+    categories.isLoading ||
+    cards.isLoading ||
+    debitCards.isLoading
+  ) {
     return <LoadingState label="Carregando suas movimentações..." />;
   }
-  if (transactions.isError || accounts.isError || categories.isError || cards.isError) {
+  if (
+    transactions.isError ||
+    accounts.isError ||
+    categories.isError ||
+    cards.isError ||
+    debitCards.isError
+  ) {
     return (
       <ErrorState
         onRetry={() => {
@@ -89,6 +107,7 @@ function TransactionsPage() {
           accounts.refetch();
           categories.refetch();
           cards.refetch();
+          debitCards.refetch();
         }}
       />
     );
@@ -211,6 +230,11 @@ function TransactionsPage() {
                   }
                   cardName={
                     transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
+                  }
+                  debitCardName={
+                    transaction.debit_card_id
+                      ? debitCardMap.get(transaction.debit_card_id)
+                      : undefined
                   }
                   onEdit={openEdit}
                   onDelete={setDeleteTarget}
