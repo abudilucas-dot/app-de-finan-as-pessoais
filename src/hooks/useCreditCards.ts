@@ -152,6 +152,37 @@ export function useDeleteCreditCardPurchase() {
   });
 }
 
+export function useReplaceCreditCardPurchase() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      transactionId: string;
+      creditCardId: string;
+      description: string;
+      amount: number;
+      categoryId: string;
+      transactionDate: string;
+      totalInstallments: number;
+      notes?: string | null;
+    }) => {
+      const { data, error } = await supabase.rpc("replace_credit_card_purchase", {
+        p_transaction_id: values.transactionId,
+        p_credit_card_id: values.creditCardId,
+        p_description: values.description,
+        p_amount: values.amount,
+        p_category_id: values.categoryId,
+        p_transaction_date: values.transactionDate,
+        p_total_installments: values.totalInstallments,
+        p_notes: values.notes?.trim() || undefined,
+      });
+      if (error) throw error;
+      return data as FinancialTransaction[];
+    },
+    onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
+  });
+}
+
 export function usePayCreditCardInvoice() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
