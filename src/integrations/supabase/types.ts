@@ -594,6 +594,45 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      replace_credit_card_purchase: {
+        Args: {
+          p_amount: number;
+          p_category_id: string;
+          p_credit_card_id: string;
+          p_description: string;
+          p_notes?: string;
+          p_total_installments?: number;
+          p_transaction_date: string;
+          p_transaction_id: string;
+        };
+        Returns: {
+          account_id: string | null;
+          amount: number;
+          category_id: string | null;
+          created_at: string;
+          credit_card_id: string | null;
+          debit_card_id: string | null;
+          description: string;
+          destination_account_id: string | null;
+          id: string;
+          installment_group_id: string | null;
+          installment_number: number | null;
+          invoice_id: string | null;
+          notes: string | null;
+          status: string;
+          total_installments: number | null;
+          transaction_date: string;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "transactions";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
     };
     Enums: {
       [_ in never]: never;
