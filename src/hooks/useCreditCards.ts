@@ -119,18 +119,20 @@ export function useCreateCardExpense() {
       amount: number;
       categoryId: string;
       transactionDate: string;
+      totalInstallments: number;
       notes?: string | null;
     }) => {
-      const { data, error } = await supabase.rpc("create_card_expense", {
+      const { data, error } = await supabase.rpc("create_card_installment_expense", {
         p_credit_card_id: values.creditCardId,
         p_description: values.description,
         p_amount: values.amount,
         p_category_id: values.categoryId,
         p_transaction_date: values.transactionDate,
-        p_notes: values.notes?.trim() || null,
+        p_total_installments: values.totalInstallments,
+        p_notes: values.notes?.trim() || undefined,
       });
       if (error) throw error;
-      return data as FinancialTransaction;
+      return data as FinancialTransaction[];
     },
     onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
   });
