@@ -7,10 +7,12 @@ import { accountTypeIcon, accountTypeLabel } from "@/lib/accounts";
 
 export function AccountCard({
   account,
+  currentBalance,
   onEdit,
   onArchive,
 }: {
   account: Account;
+  currentBalance?: number;
   onEdit?: (account: Account) => void;
   onArchive?: (account: Account) => void;
 }) {
@@ -40,8 +42,13 @@ export function AccountCard({
       </div>
 
       <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Saldo inicial</p>
-        <MoneyDisplay value={account.initial_balance} className="text-xl font-semibold" />
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          {currentBalance === undefined ? "Saldo inicial" : "Saldo atual"}
+        </p>
+        <MoneyDisplay
+          value={currentBalance ?? account.initial_balance}
+          className="text-xl font-semibold"
+        />
       </div>
 
       {(onEdit || onArchive) && !account.is_archived ? (

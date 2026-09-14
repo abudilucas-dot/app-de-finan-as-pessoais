@@ -66,17 +66,16 @@ export function MobileNavigation() {
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle>Adicionar</DrawerTitle>
-            <DrawerDescription>
-              As ações rápidas chegam junto com as transações. Por enquanto, cadastre suas contas.
-            </DrawerDescription>
+            <DrawerDescription>Registre uma receita, despesa ou transferência.</DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-8">
             <Link
-              to="/contas"
+              to="/transacoes"
+              search={{ nova: true }}
               onClick={() => setOpen(false)}
               className="flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
-              Ir para contas
+              Adicionar movimentação
             </Link>
           </div>
         </DrawerContent>

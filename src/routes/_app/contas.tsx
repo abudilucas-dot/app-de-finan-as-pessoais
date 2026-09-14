@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { toBalanceMap, useAccountBalances } from "@/hooks/useAccountBalances";
 import { type Account, useAccounts, useUpdateAccount } from "@/hooks/useAccounts";
 
 export const Route = createFileRoute("/_app/contas")({
@@ -29,19 +30,32 @@ export const Route = createFileRoute("/_app/contas")({
 
 function AccountsPage() {
   const accounts = useAccounts();
+  const balances = useAccountBalances();
   const updateAccount = useUpdateAccount();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Account | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<Account | null>(null);
 
-  if (accounts.isLoading) return <LoadingState label="Carregando suas contas..." />;
-  if (accounts.isError) return <ErrorState onRetry={() => accounts.refetch()} />;
+  if (accounts.isLoading || balances.isLoading) {
+    return <LoadingState label="Carregando suas contas..." />;
+  }
+  if (accounts.isError || balances.isError) {
+    return (
+      <ErrorState
+        onRetry={() => {
+          accounts.refetch();
+          balances.refetch();
+        }}
+      />
+    );
+  }
 
   const allAccounts = accounts.data ?? [];
   const activeAccounts = allAccounts.filter((account) => !account.is_archived);
   const archivedAccounts = allAccounts.filter((account) => account.is_archived);
+  const balanceMap = toBalanceMap(balances.data);
   const activeTotal = activeAccounts.reduce(
-    (total, account) => total + Number(account.initial_balance),
+    (total, account) => total + (balanceMap.get(account.id) ?? Number(account.initial_balance)),
     0,
   );
 
@@ -81,7 +95,7 @@ function AccountsPage() {
 
       <section className="surface flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Saldo total inicial</p>
+          <p className="text-sm font-medium text-muted-foreground">Saldo total atual</p>
           <MoneyDisplay value={activeTotal} className="mt-1 block text-2xl font-semibold" />
         </div>
         <p className="text-sm text-muted-foreground">
@@ -97,6 +111,7 @@ function AccountsPage() {
               <AccountCard
                 key={account.id}
                 account={account}
+                currentBalance={balanceMap.get(account.id) ?? Number(account.initial_balance)}
                 onEdit={openEdit}
                 onArchive={setArchiveTarget}
               />
@@ -117,7 +132,12 @@ function AccountsPage() {
           <h2 className="text-lg font-semibold">Arquivadas</h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {archivedAccounts.map((account) => (
-              <AccountCard key={account.id} account={account} onArchive={toggleArchive} />
+              <AccountCard
+                key={account.id}
+                account={account}
+                currentBalance={balanceMap.get(account.id) ?? Number(account.initial_balance)}
+                onArchive={toggleArchive}
+              />
             ))}
           </div>
         </section>

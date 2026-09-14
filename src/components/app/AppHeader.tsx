@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Eye, EyeOff, Menu, Search } from "lucide-react";
+import { Bell, Eye, EyeOff, Menu, Plus, Search } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -83,6 +83,13 @@ export function AppHeader() {
       </div>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <Button asChild className="hidden md:inline-flex">
+          <Link to="/transacoes" search={{ nova: true }}>
+            <Plus aria-hidden="true" />
+            Nova transação
+          </Link>
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"

@@ -21,7 +21,7 @@ export type NavItem = {
 
 export const primaryNav: NavItem[] = [
   { label: "Visão geral", to: "/dashboard", icon: LayoutDashboard, ready: true },
-  { label: "Transações", to: "/transacoes", icon: ArrowLeftRight, ready: false },
+  { label: "Transações", to: "/transacoes", icon: ArrowLeftRight, ready: true },
   { label: "Contas", to: "/contas", icon: Wallet, ready: true },
   { label: "Cartões", to: "/cartoes", icon: CreditCard, ready: false },
   { label: "Orçamentos", to: "/orcamentos", icon: PiggyBank, ready: false },
