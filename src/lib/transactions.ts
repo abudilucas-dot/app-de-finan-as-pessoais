@@ -29,7 +29,11 @@ export type FinancialTransaction = {
   account_id: string | null;
   destination_account_id: string | null;
   credit_card_id: string | null;
+  debit_card_id: string | null;
   invoice_id: string | null;
+  installment_group_id: string | null;
+  installment_number: number | null;
+  total_installments: number | null;
   transaction_date: string;
   status: TransactionStatus;
   notes: string | null;
@@ -44,6 +48,7 @@ export type TransactionInput = {
   category_id: string | null;
   account_id: string;
   destination_account_id: string | null;
+  debit_card_id: string | null;
   transaction_date: string;
   status: TransactionStatus;
   notes: string | null;
