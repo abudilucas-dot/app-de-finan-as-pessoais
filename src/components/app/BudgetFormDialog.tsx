@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export function BudgetFormDialog({
 
   const saving = createBudget.isPending || updateBudget.isPending;
 
-  const submit = async (event: React.FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     const amountLimit = parseMoneyInput(amount);
     if (!categoryId) return toast.error("Selecione uma categoria.");
