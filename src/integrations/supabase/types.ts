@@ -556,6 +556,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      delete_credit_card_purchase: {
+        Args: { p_transaction_id: string };
+        Returns: number;
+      };
       pay_credit_card_invoice: {
         Args: {
           p_account_id: string;
