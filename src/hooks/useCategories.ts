@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import type { TransactionType } from "@/lib/transactions";
 
 export type Category = {
   id: string;
@@ -14,7 +13,7 @@ export type Category = {
   is_default: boolean;
 };
 
-export function useCategories(type?: Exclude<TransactionType, "transfer">) {
+export function useCategories(type?: "income" | "expense") {
   const { user } = useAuth();
 
   return useQuery({
