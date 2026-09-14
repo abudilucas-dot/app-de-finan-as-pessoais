@@ -435,6 +435,79 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_rules: {
+        Row: {
+          account_id: string
+          active: boolean
+          amount: number
+          category_id: string | null
+          created_at: string
+          description: string
+          end_date: string | null
+          frequency: string
+          id: string
+          next_occurrence: string
+          notes: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          description: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          next_occurrence: string
+          notes?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          next_occurrence?: string
+          notes?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_rules_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           account_id: string | null
@@ -450,6 +523,7 @@ export type Database = {
           installment_number: number | null
           invoice_id: string | null
           notes: string | null
+          recurring_rule_id: string | null
           status: string
           total_installments: number | null
           transaction_date: string
@@ -471,6 +545,7 @@ export type Database = {
           installment_number?: number | null
           invoice_id?: string | null
           notes?: string | null
+          recurring_rule_id?: string | null
           status?: string
           total_installments?: number | null
           transaction_date?: string
@@ -492,6 +567,7 @@ export type Database = {
           installment_number?: number | null
           invoice_id?: string | null
           notes?: string | null
+          recurring_rule_id?: string | null
           status?: string
           total_installments?: number | null
           transaction_date?: string
@@ -561,6 +637,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "credit_card_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_recurring_rule_id_fkey"
+            columns: ["recurring_rule_id"]
+            isOneToOne: false
+            referencedRelation: "recurring_rules"
             referencedColumns: ["id"]
           },
         ]
@@ -657,6 +740,41 @@ export type Database = {
       }
     }
     Functions: {
+      complete_recurring_rule: {
+        Args: {
+          p_expected_occurrence: string
+          p_rule_id: string
+          p_transaction_date?: string
+        }
+        Returns: {
+          account_id: string | null
+          amount: number
+          category_id: string | null
+          created_at: string
+          credit_card_id: string | null
+          debit_card_id: string | null
+          description: string
+          destination_account_id: string | null
+          id: string
+          installment_group_id: string | null
+          installment_number: number | null
+          invoice_id: string | null
+          notes: string | null
+          recurring_rule_id: string | null
+          status: string
+          total_installments: number | null
+          transaction_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_card_expense: {
         Args: {
           p_amount: number
@@ -680,6 +798,7 @@ export type Database = {
           installment_number: number | null
           invoice_id: string | null
           notes: string | null
+          recurring_rule_id: string | null
           status: string
           total_installments: number | null
           transaction_date: string
@@ -718,6 +837,7 @@ export type Database = {
           installment_number: number | null
           invoice_id: string | null
           notes: string | null
+          recurring_rule_id: string | null
           status: string
           total_installments: number | null
           transaction_date: string
@@ -756,6 +876,7 @@ export type Database = {
           installment_number: number | null
           invoice_id: string | null
           notes: string | null
+          recurring_rule_id: string | null
           status: string
           total_installments: number | null
           transaction_date: string
@@ -795,6 +916,7 @@ export type Database = {
           installment_number: number | null
           invoice_id: string | null
           notes: string | null
+          recurring_rule_id: string | null
           status: string
           total_installments: number | null
           transaction_date: string
