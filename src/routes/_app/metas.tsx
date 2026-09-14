@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useDeleteGoal, useGoalSummaries } from "@/hooks/useGoals";
-import { type FinancialGoal, type GoalSummary } from "@/lib/goals";
+import type { GoalSummary } from "@/lib/goals";
 
 export const Route = createFileRoute("/_app/metas")({
   head: () => ({ meta: [{ title: `Metas — ${brand.name}` }] }),
@@ -25,7 +25,7 @@ function GoalsPage() {
   const accounts = useAccounts();
   const deleteGoal = useDeleteGoal();
   const [formOpen, setFormOpen] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<FinancialGoal | null>(null);
+  const [editingGoal, setEditingGoal] = useState<GoalSummary | null>(null);
   const [contributionGoal, setContributionGoal] = useState<GoalSummary | null>(null);
 
   const accountNames = useMemo(
