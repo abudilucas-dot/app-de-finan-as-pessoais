@@ -1,5 +1,6 @@
-export const TRANSACTION_TYPES = ["income", "expense", "transfer"] as const;
+export const TRANSACTION_TYPES = ["income", "expense", "transfer", "card_payment"] as const;
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+export type DirectTransactionType = Exclude<TransactionType, "card_payment">;
 
 export const TRANSACTION_STATUSES = ["confirmed", "pending", "overdue", "cancelled"] as const;
 export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];
@@ -8,6 +9,7 @@ export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   income: "Receita",
   expense: "Despesa",
   transfer: "Transferência",
+  card_payment: "Pagamento de fatura",
 };
 
 export const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {
@@ -24,8 +26,10 @@ export type FinancialTransaction = {
   description: string;
   amount: number;
   category_id: string | null;
-  account_id: string;
+  account_id: string | null;
   destination_account_id: string | null;
+  credit_card_id: string | null;
+  invoice_id: string | null;
   transaction_date: string;
   status: TransactionStatus;
   notes: string | null;
@@ -33,18 +37,17 @@ export type FinancialTransaction = {
   updated_at: string;
 };
 
-export type TransactionInput = Pick<
-  FinancialTransaction,
-  | "type"
-  | "description"
-  | "amount"
-  | "category_id"
-  | "account_id"
-  | "destination_account_id"
-  | "transaction_date"
-  | "status"
-  | "notes"
->;
+export type TransactionInput = {
+  type: DirectTransactionType;
+  description: string;
+  amount: number;
+  category_id: string | null;
+  account_id: string;
+  destination_account_id: string | null;
+  transaction_date: string;
+  status: TransactionStatus;
+  notes: string | null;
+};
 
 export function calculateMonthlySummary(
   transactions: FinancialTransaction[],
