@@ -19,6 +19,7 @@ export function TransactionItem({
   destinationAccountName,
   categoryName,
   cardName,
+  debitCardName,
   onEdit,
   onDelete,
 }: {
@@ -27,6 +28,7 @@ export function TransactionItem({
   destinationAccountName?: string | undefined;
   categoryName?: string | undefined;
   cardName?: string | undefined;
+  debitCardName?: string | undefined;
   onEdit?: (transaction: FinancialTransaction) => void;
   onDelete?: (transaction: FinancialTransaction) => void;
 }) {
@@ -53,7 +55,9 @@ export function TransactionItem({
         ? `${accountName ?? "Conta"} · Pagamento de fatura`
         : transaction.credit_card_id
           ? `${categoryName ?? "Sem categoria"} · ${cardName ?? "Cartão"}`
-          : `${categoryName ?? "Sem categoria"} · ${accountName ?? "Conta"}`;
+          : transaction.debit_card_id
+            ? `${categoryName ?? "Sem categoria"} · ${debitCardName ?? "Cartão de débito"}`
+            : `${categoryName ?? "Sem categoria"} · ${accountName ?? "Conta"}`;
   const managedByCard = Boolean(transaction.credit_card_id || transaction.invoice_id);
 
   return (
