@@ -20,7 +20,7 @@ export function useBudgetSummaries(periodStart: string) {
         .select("*")
         .eq("user_id", user!.id)
         .eq("period_start", periodStart)
-        .order("created_at");
+        .order("category_id");
       if (error) throw error;
       return (data ?? []) as unknown as BudgetSummary[];
     },
