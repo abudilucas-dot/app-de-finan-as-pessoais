@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Archive,
   CreditCard as CreditCardIcon,
+  Landmark,
   Pencil,
   Plus,
   ReceiptText,
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 
 import { CardExpenseDialog } from "@/components/app/CardExpenseDialog";
 import { CreditCardFormDialog } from "@/components/app/CreditCardFormDialog";
+import { DebitCardFormDialog } from "@/components/app/DebitCardFormDialog";
 import { InvoicePaymentDialog } from "@/components/app/InvoicePaymentDialog";
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { PageHeader } from "@/components/app/PageHeader";
@@ -29,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
+import { useDebitCards, useUpdateDebitCard } from "@/hooks/useDebitCards";
 import {
   useCreditCardInvoices,
   useCreditCards,
@@ -36,6 +39,7 @@ import {
   useUpdateCreditCard,
 } from "@/hooks/useCreditCards";
 import { type CreditCard, type CreditCardInvoice, formatShortDate } from "@/lib/creditCards";
+import { type DebitCard } from "@/lib/debitCards";
 import { type FinancialTransaction } from "@/lib/transactions";
 import { useTransactions } from "@/hooks/useTransactions";
 
@@ -75,10 +79,14 @@ function CreditCardsPage() {
   const invoices = useCreditCardInvoices();
   const transactions = useTransactions();
   const accounts = useAccounts();
+  const debitCards = useDebitCards();
   const updateCard = useUpdateCreditCard();
+  const updateDebitCard = useUpdateDebitCard();
   const [formOpen, setFormOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [editing, setEditing] = useState<CreditCard | null>(null);
+  const [debitFormOpen, setDebitFormOpen] = useState(false);
+  const [editingDebit, setEditingDebit] = useState<DebitCard | null>(null);
   const [expenseCard, setExpenseCard] = useState<CreditCard | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CreditCard | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<{
@@ -93,12 +101,14 @@ function CreditCardsPage() {
     invoices.isLoading ||
     transactions.isLoading ||
     accounts.isLoading;
+  const debitLoading = debitCards.isLoading;
   const failure =
     cards.isError ||
     summaries.isError ||
     invoices.isError ||
     transactions.isError ||
     accounts.isError;
+  const debitFailure = debitCards.isError;
   const summaryByCard = useMemo(
     () => new Map((summaries.data ?? []).map((summary) => [summary.credit_card_id, summary])),
     [summaries.data],
@@ -112,8 +122,8 @@ function CreditCardsPage() {
     [transactions.data],
   );
 
-  if (loading) return <LoadingState label="Carregando seus cartões..." />;
-  if (failure)
+  if (loading || debitLoading) return <LoadingState label="Carregando seus cartões..." />;
+  if (failure || debitFailure)
     return (
       <ErrorState
         onRetry={() => {
@@ -122,6 +132,7 @@ function CreditCardsPage() {
           invoices.refetch();
           transactions.refetch();
           accounts.refetch();
+          debitCards.refetch();
         }}
       />
     );
@@ -129,6 +140,9 @@ function CreditCardsPage() {
   const allCards = cards.data ?? [];
   const activeCards = allCards.filter((card) => !card.is_archived);
   const archivedCards = allCards.filter((card) => card.is_archived);
+  const allDebitCards = debitCards.data ?? [];
+  const activeDebitCards = allDebitCards.filter((card) => !card.is_archived);
+  const archivedDebitCards = allDebitCards.filter((card) => card.is_archived);
   const pendingInvoices = (invoices.data ?? []).filter(
     (invoice) => (invoiceBalanceById.get(invoice.id) ?? 0) > 0.005 && invoice.status !== "paid",
   );
@@ -150,6 +164,16 @@ function CreditCardsPage() {
       toast.error("Não foi possível alterar o status do cartão.");
     } finally {
       setArchiveTarget(null);
+    }
+  };
+  const toggleDebitCard = async (card: DebitCard) => {
+    try {
+      await updateDebitCard.mutateAsync({ id: card.id, is_archived: !card.is_archived });
+      toast.success(
+        card.is_archived ? "Cartão de débito reativado." : "Cartão de débito arquivado.",
+      );
+    } catch {
+      toast.error("Não foi possível alterar o status do cartão de débito.");
     }
   };
 
@@ -178,7 +202,18 @@ function CreditCardsPage() {
               }}
             >
               <Plus aria-hidden="true" />
-              Novo cartão
+              Novo crédito
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditingDebit(null);
+                setDebitFormOpen(true);
+              }}
+              disabled={(accounts.data ?? []).every((account) => account.is_archived)}
+            >
+              <Plus aria-hidden="true" />
+              Novo débito
             </Button>
           </>
         }
@@ -299,6 +334,97 @@ function CreditCardsPage() {
 
       <section className="space-y-4">
         <div className="flex items-center gap-2">
+          <Landmark className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h2 className="text-lg font-semibold">Cartões de débito</h2>
+        </div>
+        {activeDebitCards.length ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {activeDebitCards.map((card) => {
+              const account = (accounts.data ?? []).find((item) => item.id === card.account_id);
+              return (
+                <article key={card.id} className="surface overflow-hidden">
+                  <div
+                    className="p-5 text-primary-foreground"
+                    style={{ backgroundColor: card.color ?? "#2563EB" }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-semibold">{card.name}</h3>
+                        <p className="truncate text-sm text-primary-foreground/80">
+                          {card.institution ?? card.brand ?? "Cartão de débito"}
+                        </p>
+                      </div>
+                      <Landmark aria-hidden="true" className="h-6 w-6" />
+                    </div>
+                    <p className="mt-8 text-xs uppercase tracking-wide text-primary-foreground/75">
+                      Conta vinculada
+                    </p>
+                    <p className="mt-1 truncate text-lg font-semibold">
+                      {account?.name ?? "Conta indisponível"}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 p-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingDebit(card);
+                        setDebitFormOpen(true);
+                      }}
+                    >
+                      <Pencil aria-hidden="true" />
+                      Editar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleDebitCard(card)}>
+                      <Archive aria-hidden="true" />
+                      Arquivar
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon={Landmark}
+            title="Nenhum cartão de débito"
+            description="Cadastre um cartão vinculado a uma conta para identificá-lo nas despesas."
+            action={
+              <Button
+                onClick={() => {
+                  setEditingDebit(null);
+                  setDebitFormOpen(true);
+                }}
+                disabled={(accounts.data ?? []).every((account) => account.is_archived)}
+              >
+                Adicionar cartão de débito
+              </Button>
+            }
+            className="py-10"
+          />
+        )}
+        {archivedDebitCards.length ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {archivedDebitCards.map((card) => (
+              <article
+                key={card.id}
+                className="surface flex items-center justify-between gap-3 p-4"
+              >
+                <div>
+                  <h3 className="font-semibold">{card.name}</h3>
+                  <p className="text-sm text-muted-foreground">Cartão de débito arquivado</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => toggleDebitCard(card)}>
+                  Reativar
+                </Button>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
           <ReceiptText className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="text-lg font-semibold">Faturas para pagar</h2>
         </div>
@@ -369,6 +495,12 @@ function CreditCardsPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         card={editing}
+        accounts={accounts.data ?? []}
+      />
+      <DebitCardFormDialog
+        open={debitFormOpen}
+        onOpenChange={setDebitFormOpen}
+        card={editingDebit}
         accounts={accounts.data ?? []}
       />
       <CardExpenseDialog
