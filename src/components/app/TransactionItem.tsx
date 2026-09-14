@@ -23,6 +23,7 @@ export function TransactionItem({
   onEdit,
   onDelete,
   onCancelCardPurchase,
+  onEditCardPurchase,
 }: {
   transaction: FinancialTransaction;
   accountName?: string | undefined;
@@ -33,6 +34,7 @@ export function TransactionItem({
   onEdit?: (transaction: FinancialTransaction) => void;
   onDelete?: (transaction: FinancialTransaction) => void;
   onCancelCardPurchase?: (transaction: FinancialTransaction) => void;
+  onEditCardPurchase?: (transaction: FinancialTransaction) => void;
 }) {
   const Icon =
     transaction.type === "income"
@@ -135,6 +137,16 @@ export function TransactionItem({
             onClick={() => onCancelCardPurchase(transaction)}
           >
             <Trash2 />
+          </Button>
+        ) : null}
+        {onEditCardPurchase && isCreditCardPurchase ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Editar compra no cartão: ${transaction.description}`}
+            onClick={() => onEditCardPurchase(transaction)}
+          >
+            <Pencil />
           </Button>
         ) : null}
       </div>
