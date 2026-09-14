@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateGoal, useUpdateGoal } from "@/hooks/useGoals";
-import type { FinancialGoal } from "@/lib/goals";
+import type { GoalSummary } from "@/lib/goals";
 import { maskMoneyInput, parseMoneyInput } from "@/lib/money";
 
 export function GoalFormDialog({
@@ -16,7 +16,7 @@ export function GoalFormDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  goal?: FinancialGoal | null;
+  goal?: GoalSummary | null;
 }) {
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
