@@ -47,7 +47,7 @@ function SignUpPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
         data: { full_name: fullName.trim() },
       },
     });
@@ -75,7 +75,7 @@ function SignUpPage() {
     return (
       <AuthShell
         title="Confirme seu e-mail"
-        description={`Enviamos um link de confirmação para ${email}. Abra o link para ativar sua conta.`}
+        description={`Enviamos um link de confirmação para ${email}. Abra o link para ativar sua conta. Em seguida, você será direcionado para o login.`}
         footer={
           <Link to="/login" className="font-medium text-primary hover:underline">
             Voltar para o login
