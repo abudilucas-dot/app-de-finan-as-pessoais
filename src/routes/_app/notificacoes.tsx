@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   CreditCard,
   Landmark,
+  Repeat2,
   Loader2,
   Target,
   Trash2,
@@ -28,6 +29,7 @@ const notificationIcon = {
   budget: WalletCards,
   goal: Target,
   debt: Landmark,
+  subscription: Repeat2,
 } as const;
 
 function NotificationsPage() {
