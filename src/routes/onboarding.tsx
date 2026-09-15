@@ -36,7 +36,7 @@ export const Route = createFileRoute("/onboarding")({
 
 const OBJECTIVES = [
   "Controlar meus gastos",
-  "Economizar mais",
+  "Economizar",
   "Criar uma reserva",
   "Sair das dívidas",
   "Organizar meu salário",
