@@ -599,6 +599,7 @@ export type Database = {
           end_date: string | null
           frequency: string
           id: string
+          is_subscription: boolean
           next_occurrence: string
           notes: string | null
           type: string
@@ -615,6 +616,7 @@ export type Database = {
           end_date?: string | null
           frequency: string
           id?: string
+          is_subscription?: boolean
           next_occurrence: string
           notes?: string | null
           type: string
@@ -631,6 +633,7 @@ export type Database = {
           end_date?: string | null
           frequency?: string
           id?: string
+          is_subscription?: boolean
           next_occurrence?: string
           notes?: string | null
           type?: string
