@@ -1,0 +1,1 @@
+create index if not exists debt_payments_account_id_idx on public.debt_payments(account_id);\n
