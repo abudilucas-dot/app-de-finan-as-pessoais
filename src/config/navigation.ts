@@ -9,6 +9,7 @@ import {
   Wallet,
   ArrowLeftRight,
   PiggyBank,
+  Repeat2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ export const primaryNav: NavItem[] = [
   { label: "Orçamentos", to: "/orcamentos", icon: PiggyBank, ready: true },
   { label: "Metas", to: "/metas", icon: Target, ready: true },
   { label: "Dívidas", to: "/dividas", icon: Landmark, ready: true },
+  { label: "Assinaturas", to: "/assinaturas", icon: Repeat2, ready: true },
   { label: "Calendário", to: "/calendario", icon: CalendarDays, ready: true },
   { label: "Relatórios", to: "/relatorios", icon: PieChart, ready: true },
   { label: "Configurações", to: "/configuracoes", icon: Settings, ready: true },
