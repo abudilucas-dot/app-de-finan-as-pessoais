@@ -149,6 +149,21 @@ function TransactionsPage() {
   );
   const summary = calculateMonthlySummary(transactionList);
   const activeAccounts = (accounts.data ?? []).filter((account) => !account.is_archived);
+  const cardPurchaseHasPaidInvoice = cardPurchaseTarget
+    ? transactionList.some(
+        (payment) =>
+          payment.type === "card_payment" &&
+          payment.status === "confirmed" &&
+          Boolean(payment.invoice_id) &&
+          transactionList.some(
+            (purchase) =>
+              purchase.invoice_id === payment.invoice_id &&
+              (cardPurchaseTarget.installment_group_id
+                ? purchase.installment_group_id === cardPurchaseTarget.installment_group_id
+                : purchase.id === cardPurchaseTarget.id),
+          ),
+      )
+    : false;
 
   const openCreate = () => {
     setEditing(null);
@@ -200,7 +215,7 @@ function TransactionsPage() {
     } catch (error) {
       toast.error(
         error instanceof Error && error.message.includes("has been paid")
-          ? "Não é possível cancelar: uma das faturas desta compra já foi paga."
+          ? "Para cancelar esta compra, desfaça primeiro o pagamento da fatura pela lixeira da transação “Pagamento da fatura”."
           : "Não foi possível cancelar a compra no cartão.",
       );
     }
@@ -400,6 +415,9 @@ function TransactionsPage() {
                 ? `Todas as ${cardPurchaseTarget?.total_installments} parcelas serão removidas, e o limite será recalculado.`
                 : "A compra será removida, e o limite será recalculado."}
               {" Esta ação não poderá ser desfeita."}
+              {cardPurchaseHasPaidInvoice
+                ? " Esta fatura já foi paga: antes de cancelar a compra, desfaça o pagamento pela lixeira da transação “Pagamento da fatura”."
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
