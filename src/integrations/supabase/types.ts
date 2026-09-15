@@ -307,6 +307,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_date: string
+          scheduled_due_date: string | null
           transaction_id: string
           user_id: string
         }
@@ -318,6 +319,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_date?: string
+          scheduled_due_date?: string | null
           transaction_id: string
           user_id: string
         }
@@ -329,6 +331,7 @@ export type Database = {
           id?: string
           notes?: string | null
           payment_date?: string
+          scheduled_due_date?: string | null
           transaction_id?: string
           user_id?: string
         }
@@ -1073,6 +1076,7 @@ export type Database = {
           id: string
           notes: string | null
           payment_date: string
+          scheduled_due_date: string | null
           transaction_id: string
           user_id: string
         }
