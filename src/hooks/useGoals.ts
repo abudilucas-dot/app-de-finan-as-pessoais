@@ -120,6 +120,26 @@ export function useCreateGoalContribution() {
   });
 }
 
+export function useUpdateGoalContribution() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: Omit<GoalContributionInput, "goal_id"> }) => {
+      if (!user) throw new Error("Sessão não encontrada");
+      const { data, error } = await supabase
+        .from("goal_contributions")
+        .update(values)
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as GoalContribution;
+    },
+    onSuccess: () => invalidateGoalData(queryClient, user?.id),
+  });
+}
+
 export function useDeleteGoalContribution() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
