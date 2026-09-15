@@ -11,7 +11,16 @@ import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-const RESEND_COOLDOWN_SECONDS = 60;
+const RESEND_COOLDOWN_SECONDS = 120;
+
+function resendCooldownKey(email: string) {
+  return `signup-confirmation-cooldown:${email.trim().toLowerCase()}`;
+}
+
+function readResendWait(email: string) {
+  const expiresAt = Number(window.sessionStorage.getItem(resendCooldownKey(email)) ?? 0);
+  return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+}
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
@@ -36,6 +45,16 @@ function SignUpPage() {
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
   const [resendWaitSeconds, setResendWaitSeconds] = useState(0);
   const [signupInProgress, setSignupInProgress] = useState(false);
+
+  const startResendCooldown = (targetEmail: string) => {
+    const expiresAt = Date.now() + RESEND_COOLDOWN_SECONDS * 1000;
+    window.sessionStorage.setItem(resendCooldownKey(targetEmail), String(expiresAt));
+    startResendCooldown(email);
+  };
+
+  useEffect(() => {
+    if (emailSent) setResendWaitSeconds(readResendWait(email));
+  }, [emailSent, email]);
 
   useEffect(() => {
     if (resendWaitSeconds <= 0) return;
@@ -65,7 +84,7 @@ function SignUpPage() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: emailConfirmationRedirectUrl,
+        emailRedirectTo: emailConfirmationRedirectUrl(),
         data: { full_name: fullName.trim() },
       },
     });
@@ -80,6 +99,8 @@ function SignUpPage() {
           ? "Abra o endereço oficial do aplicativo e tente novamente."
           : message.includes("rate limit") || message.includes("email rate limit")
             ? "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente."
+            : message.includes("already") || message.includes("registered")
+            ? "Se este e-mail já tiver uma conta, tente entrar ou aguarde antes de reenviar a confirmação."
             : "Não foi possível criar sua conta. Tente novamente.",
       );
       return;
@@ -112,7 +133,7 @@ function SignUpPage() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: email.trim(),
-      options: { emailRedirectTo: emailConfirmationRedirectUrl },
+      options: { emailRedirectTo: emailConfirmationRedirectUrl() },
     });
     setResendingConfirmation(false);
 
@@ -126,7 +147,7 @@ function SignUpPage() {
       return;
     }
 
-    setResendWaitSeconds(RESEND_COOLDOWN_SECONDS);
+    startResendCooldown(email);
     toast.success("Se sua conta ainda precisar de confirmação, enviamos um novo link.");
   };
 
@@ -134,7 +155,7 @@ function SignUpPage() {
     return (
       <AuthShell
         title="Confirme seu e-mail"
-        description={`Enviamos um link para ${email}. Depois da confirmação, você será direcionado para o login.`}
+        description={`Enviamos um link para ${email}. Depois da confirmação, o login será aberto no mesmo endereço do aplicativo.`}
         footer={
           <Link to="/login" className="font-medium text-primary hover:underline">
             Ir para o login
@@ -143,7 +164,7 @@ function SignUpPage() {
       >
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Não encontrou a mensagem? Confira Spam e Promoções. O reenvio fica disponível após um minuto para evitar bloqueios.
+            Não encontrou a mensagem? Confira Spam e Promoções. O reenvio fica disponível após dois minutos, mesmo se a página for atualizada, para evitar bloqueios.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
