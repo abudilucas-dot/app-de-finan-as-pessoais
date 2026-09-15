@@ -23,9 +23,13 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreditCards, useDeleteCreditCardPayment, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
+import { useCreditCards, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
 import { useDebitCards } from "@/hooks/useDebitCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
+import {
+  consumeNewTransactionRequest,
+  newTransactionEventName,
+} from "@/lib/newTransaction";
 import {
   type FinancialTransaction,
   type TransactionType,
@@ -36,8 +40,6 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/transacoes")({
   head: () => ({ meta: [{ title: `Transações — ${brand.name}` }] }),
-  validateSearch: (search: Record<string, unknown>): { nova?: boolean } =>
-    search["nova"] === true || search["nova"] === "true" ? { nova: true } : {},
   component: TransactionsPage,
 });
 
@@ -73,7 +75,6 @@ function toCardPurchaseDraft(
 }
 
 function TransactionsPage() {
-  const search = Route.useSearch();
   const transactions = useTransactions();
   const accounts = useAccounts();
   const categories = useCategories();
@@ -81,21 +82,23 @@ function TransactionsPage() {
   const debitCards = useDebitCards();
   const deleteTransaction = useDeleteTransaction();
   const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
-  const deleteCreditCardPayment = useDeleteCreditCardPayment();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
   const [cardPurchaseTarget, setCardPurchaseTarget] = useState<FinancialTransaction | null>(null);
-  const [cardPaymentTarget, setCardPaymentTarget] = useState<FinancialTransaction | null>(null);
   const [editingCardPurchase, setEditingCardPurchase] = useState<CardPurchaseDraft | null>(null);
 
   useEffect(() => {
-    if (search.nova) {
+    const openRequestedTransaction = () => {
       setEditing(null);
       setFormOpen(true);
-    }
-  }, [search.nova]);
+    };
+
+    if (consumeNewTransactionRequest()) openRequestedTransaction();
+    window.addEventListener(newTransactionEventName, openRequestedTransaction);
+    return () => window.removeEventListener(newTransactionEventName, openRequestedTransaction);
+  }, []);
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -149,21 +152,6 @@ function TransactionsPage() {
   );
   const summary = calculateMonthlySummary(transactionList);
   const activeAccounts = (accounts.data ?? []).filter((account) => !account.is_archived);
-  const cardPurchaseHasPaidInvoice = cardPurchaseTarget
-    ? transactionList.some(
-        (payment) =>
-          payment.type === "card_payment" &&
-          payment.status === "confirmed" &&
-          Boolean(payment.invoice_id) &&
-          transactionList.some(
-            (purchase) =>
-              purchase.invoice_id === payment.invoice_id &&
-              (cardPurchaseTarget.installment_group_id
-                ? purchase.installment_group_id === cardPurchaseTarget.installment_group_id
-                : purchase.id === cardPurchaseTarget.id),
-          ),
-      )
-    : false;
 
   const openCreate = () => {
     setEditing(null);
@@ -184,21 +172,10 @@ function TransactionsPage() {
     if (!deleteTarget) return;
     try {
       await deleteTransaction.mutateAsync(deleteTarget.id);
-      toast.success("Movimentação movida para a lixeira.");
+      toast.success("Movimentação excluída.");
       setDeleteTarget(null);
     } catch {
-      toast.error("Não foi possível mover a movimentação para a lixeira.");
-    }
-  };
-
-  const cancelCardPayment = async () => {
-    if (!cardPaymentTarget) return;
-    try {
-      await deleteCreditCardPayment.mutateAsync(cardPaymentTarget.id);
-      toast.success("Pagamento movido para a lixeira. A fatura voltou a ficar em aberto.");
-      setCardPaymentTarget(null);
-    } catch {
-      toast.error("Não foi possível mover o pagamento da fatura para a lixeira.");
+      toast.error("Não foi possível excluir a movimentação.");
     }
   };
 
@@ -208,14 +185,14 @@ function TransactionsPage() {
       await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
       toast.success(
         (cardPurchaseTarget.total_installments ?? 1) > 1
-          ? "Compra parcelada movida para a lixeira. Todas as parcelas foram removidas do cálculo."
-          : "Compra no cartão movida para a lixeira.",
+          ? "Compra parcelada cancelada. Todas as parcelas foram removidas."
+          : "Compra no cartão cancelada.",
       );
       setCardPurchaseTarget(null);
     } catch (error) {
       toast.error(
         error instanceof Error && error.message.includes("has been paid")
-          ? "Para cancelar esta compra, desfaça primeiro o pagamento da fatura pela lixeira da transação “Pagamento da fatura”."
+          ? "Não é possível cancelar: uma das faturas desta compra já foi paga."
           : "Não foi possível cancelar a compra no cartão.",
       );
     }
@@ -320,7 +297,6 @@ function TransactionsPage() {
                   onDelete={setDeleteTarget}
                   onCancelCardPurchase={setCardPurchaseTarget}
                   onEditCardPurchase={openEditCardPurchase}
-                  onDeleteCardPayment={setCardPaymentTarget}
                 />
               ))}
             </div>
@@ -360,9 +336,9 @@ function TransactionsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mover esta movimentação para a lixeira?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir esta movimentação?</AlertDialogTitle>
             <AlertDialogDescription>
-              Ela deixará de afetar o saldo das contas e não poderá ser desfeita.
+              Essa ação recalculará o saldo das contas e não poderá ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -372,32 +348,7 @@ function TransactionsPage() {
               disabled={deleteTransaction.isPending}
               onClick={removeTransaction}
             >
-              {deleteTransaction.isPending ? "Movendo..." : "Mover para lixeira"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={Boolean(cardPaymentTarget)}
-        onOpenChange={(open) => !open && setCardPaymentTarget(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Desfazer este pagamento de fatura?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O valor voltará ao saldo da conta usada no pagamento e a fatura ficará em aberto novamente.
-              Depois, se quiser, você poderá cancelar a compra no cartão.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteCreditCardPayment.isPending}
-              onClick={cancelCardPayment}
-            >
-              {deleteCreditCardPayment.isPending ? "Movendo..." : "Mover para lixeira"}
+              {deleteTransaction.isPending ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -415,9 +366,6 @@ function TransactionsPage() {
                 ? `Todas as ${cardPurchaseTarget?.total_installments} parcelas serão removidas, e o limite será recalculado.`
                 : "A compra será removida, e o limite será recalculado."}
               {" Esta ação não poderá ser desfeita."}
-              {cardPurchaseHasPaidInvoice
-                ? " Esta fatura já foi paga: antes de cancelar a compra, desfaça o pagamento pela lixeira da transação “Pagamento da fatura”."
-                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -427,7 +375,7 @@ function TransactionsPage() {
               disabled={deleteCreditCardPurchase.isPending}
               onClick={cancelCardPurchase}
             >
-              {deleteCreditCardPurchase.isPending ? "Movendo..." : "Mover para lixeira"}
+              {deleteCreditCardPurchase.isPending ? "Cancelando..." : "Cancelar compra"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
