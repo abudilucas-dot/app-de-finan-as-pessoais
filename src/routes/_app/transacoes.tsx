@@ -184,10 +184,10 @@ function TransactionsPage() {
     if (!deleteTarget) return;
     try {
       await deleteTransaction.mutateAsync(deleteTarget.id);
-      toast.success("Movimentação excluída.");
+      toast.success("Movimentação movida para a lixeira.");
       setDeleteTarget(null);
     } catch {
-      toast.error("Não foi possível excluir a movimentação.");
+      toast.error("Não foi possível mover a movimentação para a lixeira.");
     }
   };
 
@@ -195,10 +195,10 @@ function TransactionsPage() {
     if (!cardPaymentTarget) return;
     try {
       await deleteCreditCardPayment.mutateAsync(cardPaymentTarget.id);
-      toast.success("Pagamento desfeito. A fatura voltou a ficar em aberto.");
+      toast.success("Pagamento movido para a lixeira. A fatura voltou a ficar em aberto.");
       setCardPaymentTarget(null);
     } catch {
-      toast.error("Não foi possível desfazer o pagamento da fatura.");
+      toast.error("Não foi possível mover o pagamento da fatura para a lixeira.");
     }
   };
 
@@ -208,8 +208,8 @@ function TransactionsPage() {
       await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
       toast.success(
         (cardPurchaseTarget.total_installments ?? 1) > 1
-          ? "Compra parcelada cancelada. Todas as parcelas foram removidas."
-          : "Compra no cartão cancelada.",
+          ? "Compra parcelada movida para a lixeira. Todas as parcelas foram removidas do cálculo."
+          : "Compra no cartão movida para a lixeira.",
       );
       setCardPurchaseTarget(null);
     } catch (error) {
@@ -360,9 +360,9 @@ function TransactionsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir esta movimentação?</AlertDialogTitle>
+            <AlertDialogTitle>Mover esta movimentação para a lixeira?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação recalculará o saldo das contas e não poderá ser desfeita.
+              Ela deixará de afetar o saldo das contas e não poderá ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -372,7 +372,7 @@ function TransactionsPage() {
               disabled={deleteTransaction.isPending}
               onClick={removeTransaction}
             >
-              {deleteTransaction.isPending ? "Excluindo..." : "Excluir"}
+              {deleteTransaction.isPending ? "Movendo..." : "Mover para lixeira"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -397,7 +397,7 @@ function TransactionsPage() {
               disabled={deleteCreditCardPayment.isPending}
               onClick={cancelCardPayment}
             >
-              {deleteCreditCardPayment.isPending ? "Desfazendo..." : "Desfazer pagamento"}
+              {deleteCreditCardPayment.isPending ? "Movendo..." : "Mover para lixeira"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -427,7 +427,7 @@ function TransactionsPage() {
               disabled={deleteCreditCardPurchase.isPending}
               onClick={cancelCardPurchase}
             >
-              {deleteCreditCardPurchase.isPending ? "Cancelando..." : "Cancelar compra"}
+              {deleteCreditCardPurchase.isPending ? "Movendo..." : "Mover para lixeira"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
