@@ -62,6 +62,7 @@ export function cardDisplayName(card: Pick<CreditCard, "name" | "institution" | 
 
 export function formatShortDate(date: string) {
   const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) return date;
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
     new Date(year, month - 1, day),
   );
