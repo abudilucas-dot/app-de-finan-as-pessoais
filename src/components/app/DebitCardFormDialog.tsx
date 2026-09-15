@@ -57,10 +57,16 @@ export function DebitCardFormDialog({
   }, [activeAccounts, card, open]);
 
   const saving = createCard.isPending || updateCard.isPending;
-  const submit = async (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!name.trim()) return toast.error("Informe um nome para o cartão.");
-    if (!accountId) return toast.error("Selecione a conta vinculada.");
+    if (!name.trim()) {
+      toast.error("Informe um nome para o cartão.");
+      return;
+    }
+    if (!accountId) {
+      toast.error("Selecione a conta vinculada.");
+      return;
+    }
     const values = {
       name: name.trim(),
       institution: institution.trim() || null,
