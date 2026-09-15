@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreditCards, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
+import { useCreditCards, useDeleteCreditCardPayment, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
 import { useDebitCards } from "@/hooks/useDebitCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
 import {
@@ -81,11 +81,13 @@ function TransactionsPage() {
   const debitCards = useDebitCards();
   const deleteTransaction = useDeleteTransaction();
   const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
+  const deleteCreditCardPayment = useDeleteCreditCardPayment();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
   const [cardPurchaseTarget, setCardPurchaseTarget] = useState<FinancialTransaction | null>(null);
+  const [cardPaymentTarget, setCardPaymentTarget] = useState<FinancialTransaction | null>(null);
   const [editingCardPurchase, setEditingCardPurchase] = useState<CardPurchaseDraft | null>(null);
 
   useEffect(() => {
@@ -171,6 +173,17 @@ function TransactionsPage() {
       setDeleteTarget(null);
     } catch {
       toast.error("Não foi possível excluir a movimentação.");
+    }
+  };
+
+  const cancelCardPayment = async () => {
+    if (!cardPaymentTarget) return;
+    try {
+      await deleteCreditCardPayment.mutateAsync(cardPaymentTarget.id);
+      toast.success("Pagamento desfeito. A fatura voltou a ficar em aberto.");
+      setCardPaymentTarget(null);
+    } catch {
+      toast.error("Não foi possível desfazer o pagamento da fatura.");
     }
   };
 
@@ -292,6 +305,7 @@ function TransactionsPage() {
                   onDelete={setDeleteTarget}
                   onCancelCardPurchase={setCardPurchaseTarget}
                   onEditCardPurchase={openEditCardPurchase}
+                  onDeleteCardPayment={setCardPaymentTarget}
                 />
               ))}
             </div>
@@ -344,6 +358,31 @@ function TransactionsPage() {
               onClick={removeTransaction}
             >
               {deleteTransaction.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(cardPaymentTarget)}
+        onOpenChange={(open) => !open && setCardPaymentTarget(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desfazer este pagamento de fatura?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O valor voltará ao saldo da conta usada no pagamento e a fatura ficará em aberto novamente.
+              Depois, se quiser, você poderá cancelar a compra no cartão.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCreditCardPayment.isPending}
+              onClick={cancelCardPayment}
+            >
+              {deleteCreditCardPayment.isPending ? "Desfazendo..." : "Desfazer pagamento"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
