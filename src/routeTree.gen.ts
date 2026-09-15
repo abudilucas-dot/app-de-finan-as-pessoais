@@ -15,8 +15,8 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
-import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
-import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'\nimport { Route as PrivacidadeRouteImport } from './routes/privacidade'\nimport { Route as TermosRouteImport } from './routes/termos'
+import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'\nimport { Route as AppAjudaRouteImport } from './routes/_app/ajuda'
 import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
@@ -64,12 +64,12 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any)\nconst PrivacidadeRoute = PrivacidadeRouteImport.update({\n  id: '/privacidade',\n  path: '/privacidade',\n  getParentRoute: () => rootRouteImport,\n} as any)\nconst TermosRoute = TermosRouteImport.update({\n  id: '/termos',\n  path: '/termos',\n  getParentRoute: () => rootRouteImport,\n} as any)
 const AppAssinaturasRoute = AppAssinaturasRouteImport.update({
   id: '/assinaturas',
   path: '/assinaturas',
   getParentRoute: () => AppRoute,
-} as any)
+} as any)\nconst AppAjudaRoute = AppAjudaRouteImport.update({\n  id: '/ajuda',\n  path: '/ajuda',\n  getParentRoute: () => AppRoute,\n} as any)
 const AppCalendarioRoute = AppCalendarioRouteImport.update({
   id: '/calendario',
   path: '/calendario',
@@ -327,7 +327,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/assinaturas': {
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/ajuda': {\n      id: '/_app/ajuda'\n      path: '/ajuda'\n      fullPath: '/ajuda'\n      preLoaderRoute: typeof AppAjudaRouteImport\n      parentRoute: typeof AppRoute\n    }\n    '/_app/assinaturas': {
     id: '/_app/assinaturas'
     path: '/assinaturas'
     fullPath: '/assinaturas'

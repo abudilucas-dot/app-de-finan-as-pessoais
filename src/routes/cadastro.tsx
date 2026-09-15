@@ -198,6 +198,10 @@ function SignUpPage() {
           <Link to="/login" className="font-medium text-primary hover:underline">
             Entrar
           </Link>
+          <span className="mx-2 text-muted-foreground">·</span>
+          <Link to="/privacidade" className="hover:underline">Privacidade</Link>
+          <span className="mx-2 text-muted-foreground">·</span>
+          <Link to="/termos" className="hover:underline">Termos</Link>
         </>
       }
     >

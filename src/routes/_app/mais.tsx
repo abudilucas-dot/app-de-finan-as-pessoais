@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CreditCard, Download, Landmark, Repeat2, Settings, Target, Trash2, Wallet } from "lucide-react";
+import { CircleHelp, CreditCard, Download, Landmark, Repeat2, Settings, Target, Trash2, Wallet } from "lucide-react";
 
 import { PageHeader } from "@/components/app/PageHeader";
 
@@ -14,6 +14,7 @@ const links = [
   { to: "/dividas", label: "Dívidas", description: "Controle o que falta quitar", icon: Landmark },
   { to: "/assinaturas", label: "Assinaturas", description: "Acompanhe serviços recorrentes", icon: Repeat2 },
   { to: "/lixeira", label: "Lixeira", description: "Restaure movimentações excluídas", icon: Trash2 },
+  { to: "/ajuda", label: "Ajuda e suporte", description: "Tire dúvidas sobre o aplicativo", icon: CircleHelp },
   { to: "/configuracoes", label: "Exportar dados", description: "Baixe uma cópia dos seus dados em CSV", icon: Download },
   {
     to: "/configuracoes",
