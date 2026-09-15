@@ -55,28 +55,21 @@ function LoginPage() {
       return;
     }
 
-    let cancelled = false;
     setConfirmingEmail(true);
 
     void supabase.auth
       .signOut({ scope: "local" })
       .then(({ error }) => {
         if (error) throw error;
-        if (cancelled) return;
 
         window.history.replaceState(window.history.state, "", "/login");
         setConfirmingEmail(false);
         toast.success("E-mail confirmado! Agora entre com sua nova conta.");
       })
       .catch(() => {
-        if (cancelled) return;
         setConfirmingEmail(false);
         toast.error("Não foi possível finalizar a confirmação. Atualize a página e tente novamente.");
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [user, loading, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
