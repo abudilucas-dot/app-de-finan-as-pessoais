@@ -14,7 +14,8 @@ import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
-import { createCsvFile, localFileDate, saveCsvFile } from "@/lib/csvExport";
+import { localFileDate, saveCsvFile } from "@/lib/csvExport";
+import { createFinanceExcelFile, type ExportSheet } from "@/lib/excelExport";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -61,44 +62,224 @@ function SettingsPage() {
       await updateSettings.mutateAsync({ hide_values: checked });
       toast.success(checked ? "Valores ocultos." : "Valores visíveis.");
     } catch {
-      toast.error("Não foi possível salvar essa preferência.");
-    }
-  };
-
-  const exportData = async () => {
+      toast.e  const exportData = async () => {
     if (!user) return;
     setExporting(true);
     try {
-      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences] = await Promise.all([
-        supabase.from("accounts").select("*").eq("user_id", user.id),
-        supabase.from("credit_cards").select("*").eq("user_id", user.id),
-        supabase.from("debit_cards").select("*").eq("user_id", user.id),
-        supabase.from("transactions").select("*").eq("user_id", user.id).order("transaction_date"),
-        supabase.from("budgets").select("*").eq("user_id", user.id),
-        supabase.from("financial_goals").select("*").eq("user_id", user.id),
-        supabase.from("goal_contributions").select("*").eq("user_id", user.id),
-        supabase.from("recurring_rules").select("*").eq("user_id", user.id),
-      ]);
-      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences];
+      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, categories] =
+        await Promise.all([
+          supabase.from("accounts").select("*").eq("user_id", user.id),
+          supabase.from("credit_cards").select("*").eq("user_id", user.id),
+          supabase.from("debit_cards").select("*").eq("user_id", user.id),
+          supabase.from("transactions").select("*").eq("user_id", user.id).order("transaction_date"),
+          supabase.from("budgets").select("*").eq("user_id", user.id),
+          supabase.from("financial_goals").select("*").eq("user_id", user.id),
+          supabase.from("goal_contributions").select("*").eq("user_id", user.id),
+          supabase.from("recurring_rules").select("*").eq("user_id", user.id),
+          supabase.from("categories").select("id, name"),
+        ]);
+      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, categories];
       const failed = result.find((item) => item.error);
       if (failed?.error) throw failed.error;
-      const rows = [
-        ...(accounts.data ?? []).map((item) => ["Conta", item.id, item.name, item.institution, item.type, item.initial_balance, "", "", item.is_archived, ""]),
-        ...(creditCards.data ?? []).map((item) => ["Cartão de crédito", item.id, item.name, item.institution, item.brand, item.total_limit, item.closing_day, item.due_day, item.is_archived, ""]),
-        ...(debitCards.data ?? []).map((item) => ["Cartão de débito", item.id, item.name, item.institution, item.brand, "", item.account_id, "", item.is_archived, ""]),
-        ...(transactions.data ?? []).map((item) => ["Movimentação", item.id, item.description, item.type, item.status, item.amount, item.transaction_date, item.deleted_at ? "Na lixeira" : "Ativa", item.account_id ?? "", item.notes ?? ""]),
-        ...(budgets.data ?? []).map((item) => ["Orçamento", item.id, item.category_id, item.period_start, "", item.amount_limit, "", "", "", ""]),
-        ...(goals.data ?? []).map((item) => ["Meta", item.id, item.name, item.status, item.target_date ?? "", item.target_amount, "", "", "", ""]),
-        ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
-        ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
+
+      const accountNames = new Map((accounts.data ?? []).map((item) => [item.id, item.name]));
+      const creditCardNames = new Map((creditCards.data ?? []).map((item) => [item.id, item.name]));
+      const categoryNames = new Map((categories.data ?? []).map((item) => [item.id, item.name]));
+      const goalNames = new Map((goals.data ?? []).map((item) => [item.id, item.name]));
+      const typeLabels: Record<string, string> = {
+        income: "Receita",
+        expense: "Despesa",
+        transfer: "Transferência",
+        card_payment: "Pagamento de fatura",
+      };
+      const statusLabels: Record<string, string> = {
+        confirmed: "Confirmada",
+        pending: "Pendente",
+        overdue: "Em atraso",
+        cancelled: "Cancelada",
+      };
+      const accountTypeLabels: Record<string, string> = {
+        checking: "Conta corrente",
+        savings: "Poupança",
+        cash: "Dinheiro",
+        digital_wallet: "Carteira digital",
+        investment: "Investimentos",
+        other: "Outra",
+      };
+
+      const activeTransactions = (transactions.data ?? []).filter((item) => !item.deleted_at);
+      const totalIncome = activeTransactions
+        .filter((item) => item.type === "income" && item.status === "confirmed")
+        .reduce((total, item) => total + Number(item.amount ?? 0), 0);
+      const totalExpenses = activeTransactions
+        .filter((item) => item.type === "expense" && item.status === "confirmed")
+        .reduce((total, item) => total + Number(item.amount ?? 0), 0);
+
+      const sheets: ExportSheet[] = [
+        {
+          name: "Movimentações",
+          columns: [
+            { header: "Descrição", key: "description", width: 30 },
+            { header: "Tipo", key: "type", width: 22 },
+            { header: "Categoria", key: "category", width: 22 },
+            { header: "Valor", key: "amount", width: 16, format: "currency" },
+            { header: "Data", key: "date", width: 14, format: "date" },
+            { header: "Status", key: "status", width: 16 },
+            { header: "Conta", key: "account", width: 22 },
+            { header: "Cartão", key: "card", width: 22 },
+            { header: "Observações", key: "notes", width: 32 },
+            { header: "Situação", key: "situation", width: 16 },
+          ],
+          rows: (transactions.data ?? []).map((item) => ({
+            description: item.description,
+            type: typeLabels[item.type] ?? item.type,
+            category: categoryNames.get(item.category_id ?? "") ?? "Sem categoria",
+            amount: Number(item.amount ?? 0),
+            date: item.transaction_date ? new Date(`${item.transaction_date}T12:00:00`) : "",
+            status: statusLabels[item.status] ?? item.status,
+            account: accountNames.get(item.account_id ?? "") ?? "—",
+            card: creditCardNames.get(item.credit_card_id ?? "") ?? "—",
+            notes: item.notes ?? "",
+            situation: item.deleted_at ? "Na lixeira" : "Ativa",
+          })),
+        },
+        {
+          name: "Contas",
+          columns: [
+            { header: "Nome", key: "name", width: 26 },
+            { header: "Instituição", key: "institution", width: 24 },
+            { header: "Tipo", key: "type", width: 22 },
+            { header: "Saldo inicial", key: "balance", width: 18, format: "currency" },
+            { header: "Arquivada", key: "archived", width: 14 },
+          ],
+          rows: (accounts.data ?? []).map((item) => ({
+            name: item.name,
+            institution: item.institution ?? "—",
+            type: accountTypeLabels[item.type] ?? item.type,
+            balance: Number(item.initial_balance ?? 0),
+            archived: item.is_archived ? "Sim" : "Não",
+          })),
+        },
+        {
+          name: "Cartões",
+          columns: [
+            { header: "Tipo", key: "type", width: 20 },
+            { header: "Nome", key: "name", width: 26 },
+            { header: "Instituição", key: "institution", width: 24 },
+            { header: "Bandeira", key: "brand", width: 16 },
+            { header: "Limite", key: "limit", width: 16, format: "currency" },
+            { header: "Fechamento", key: "closing", width: 14 },
+            { header: "Vencimento", key: "due", width: 14 },
+            { header: "Conta vinculada", key: "account", width: 24 },
+            { header: "Arquivado", key: "archived", width: 14 },
+          ],
+          rows: [
+            ...(creditCards.data ?? []).map((item) => ({
+              type: "Crédito",
+              name: item.name,
+              institution: item.institution ?? "—",
+              brand: item.brand ?? "—",
+              limit: Number(item.total_limit ?? 0),
+              closing: item.closing_day ?? "—",
+              due: item.due_day ?? "—",
+              account: accountNames.get(item.default_payment_account_id ?? "") ?? "—",
+              archived: item.is_archived ? "Sim" : "Não",
+            })),
+            ...(debitCards.data ?? []).map((item) => ({
+              type: "Débito",
+              name: item.name,
+              institution: item.institution ?? "—",
+              brand: item.brand ?? "—",
+              limit: "",
+              closing: "—",
+              due: "—",
+              account: accountNames.get(item.account_id ?? "") ?? "—",
+              archived: item.is_archived ? "Sim" : "Não",
+            })),
+          ],
+        },
+        {
+          name: "Orçamentos",
+          columns: [
+            { header: "Categoria", key: "category", width: 26 },
+            { header: "Início do período", key: "period", width: 18, format: "date" },
+            { header: "Limite", key: "limit", width: 18, format: "currency" },
+          ],
+          rows: (budgets.data ?? []).map((item) => ({
+            category: categoryNames.get(item.category_id) ?? "Sem categoria",
+            period: item.period_start ? new Date(`${item.period_start}T12:00:00`) : "",
+            limit: Number(item.amount_limit ?? 0),
+          })),
+        },
+        {
+          name: "Metas",
+          columns: [
+            { header: "Meta", key: "name", width: 30 },
+            { header: "Valor desejado", key: "target", width: 20, format: "currency" },
+            { header: "Data alvo", key: "date", width: 16, format: "date" },
+            { header: "Status", key: "status", width: 16 },
+          ],
+          rows: (goals.data ?? []).map((item) => ({
+            name: item.name,
+            target: Number(item.target_amount ?? 0),
+            date: item.target_date ? new Date(`${item.target_date}T12:00:00`) : "",
+            status: item.status === "active" ? "Ativa" : item.status,
+          })),
+        },
+        {
+          name: "Aportes",
+          columns: [
+            { header: "Meta", key: "goal", width: 30 },
+            { header: "Valor", key: "amount", width: 18, format: "currency" },
+            { header: "Data", key: "date", width: 16, format: "date" },
+            { header: "Conta", key: "account", width: 24 },
+            { header: "Observações", key: "notes", width: 32 },
+          ],
+          rows: (contributions.data ?? []).map((item) => ({
+            goal: goalNames.get(item.goal_id) ?? "Meta removida",
+            amount: Number(item.amount ?? 0),
+            date: item.contribution_date ? new Date(`${item.contribution_date}T12:00:00`) : "",
+            account: accountNames.get(item.account_id ?? "") ?? "—",
+            notes: item.notes ?? "",
+          })),
+        },
+        {
+          name: "Recorrências",
+          columns: [
+            { header: "Descrição", key: "description", width: 30 },
+            { header: "Tipo", key: "type", width: 18 },
+            { header: "Frequência", key: "frequency", width: 18 },
+            { header: "Valor", key: "amount", width: 18, format: "currency" },
+            { header: "Próxima ocorrência", key: "date", width: 20, format: "date" },
+            { header: "Conta", key: "account", width: 24 },
+            { header: "Ativa", key: "active", width: 14 },
+          ],
+          rows: (recurrences.data ?? []).map((item) => ({
+            description: item.description,
+            type: typeLabels[item.type] ?? item.type,
+            frequency: item.frequency,
+            amount: Number(item.amount ?? 0),
+            date: item.next_occurrence ? new Date(`${item.next_occurrence}T12:00:00`) : "",
+            account: accountNames.get(item.account_id ?? "") ?? "—",
+            active: item.active ? "Sim" : "Não",
+          })),
+        },
       ];
-      const filename = `financas-${localFileDate()}.csv`;
+
+      const filename = `financas-${localFileDate()}.xlsx`;
       setPreparedBackup(
-        createCsvFile(filename, ["Tipo de registro", "ID", "Descrição / nome", "Detalhe 1", "Detalhe 2", "Valor", "Data / referência", "Situação", "Vínculo", "Observações"], rows),
+        await createFinanceExcelFile(filename, [
+          ["Contas cadastradas", accounts.data?.length ?? 0],
+          ["Cartões cadastrados", (creditCards.data?.length ?? 0) + (debitCards.data?.length ?? 0)],
+          ["Movimentações ativas", activeTransactions.length],
+          ["Receitas confirmadas", totalIncome],
+          ["Despesas confirmadas", totalExpenses],
+          ["Metas cadastradas", goals.data?.length ?? 0],
+        ], sheets),
       );
-      toast.success("Backup preparado. Agora escolha onde salvar.");
+      toast.success("Planilha preparada. Agora escolha onde salvar.");
     } catch {
-      toast.error("Não foi possível exportar seus dados.");
+      toast.error("Não foi possível preparar sua planilha.");
     } finally {
       setExporting(false);
     }
@@ -213,12 +394,12 @@ function SettingsPage() {
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe uma cópia em CSV das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
+              Baixe uma planilha Excel organizada, com abas separadas para cada área das suas finanças.
             </p>
             {preparedBackup ? (
               <div className="mt-4 space-y-3">
                 <p className="text-sm font-medium text-foreground">
-                  Backup pronto: {preparedBackup.name}
+                  Planilha pronta: {preparedBackup.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
@@ -236,7 +417,7 @@ function SettingsPage() {
             ) : (
               <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
                 <Download aria-hidden="true" />
-                {exporting ? "Preparando arquivo..." : "Preparar backup em CSV"}
+                {exporting ? "Preparando arquivo..." : "Preparar planilha Excel"}
               </Button>
             )}
           </div>
