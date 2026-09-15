@@ -37,7 +37,7 @@ export function DebtPaymentDialog({
     setDate(todayDate());
     setAccountId(activeAccounts[0]?.id ?? "");
     setNotes("");
-  }, [open, debt?.id, activeAccounts]);
+  }, [open, debt?.id]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
