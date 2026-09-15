@@ -49,7 +49,7 @@ function SignUpPage() {
   const startResendCooldown = (targetEmail: string) => {
     const expiresAt = Date.now() + RESEND_COOLDOWN_SECONDS * 1000;
     window.sessionStorage.setItem(resendCooldownKey(targetEmail), String(expiresAt));
-    startResendCooldown(email);
+    setResendWaitSeconds(RESEND_COOLDOWN_SECONDS);
   };
 
   useEffect(() => {
@@ -123,7 +123,7 @@ function SignUpPage() {
     setSubmitting(false);
     setSignupInProgress(false);
     setEmailSent(true);
-    setResendWaitSeconds(RESEND_COOLDOWN_SECONDS);
+    startResendCooldown(email);
   };
 
   const handleResendConfirmation = async () => {
