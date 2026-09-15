@@ -26,10 +26,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useCreditCards, useDeleteCreditCardPurchase } from "@/hooks/useCreditCards";
 import { useDebitCards } from "@/hooks/useDebitCards";
 import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
-import {
-  consumeNewTransactionRequest,
-  newTransactionEventName,
-} from "@/lib/newTransaction";
+import { consumeNewTransactionRequest, newTransactionEventName } from "@/lib/newTransaction";
 import {
   type FinancialTransaction,
   type TransactionType,
