@@ -15,7 +15,7 @@ export type NavItem = {
   label: string;
   to: string;
   icon: LucideIcon;
-  /** Falso = rota existe apenas como navegação futura ("Em construção"). */
+  /** Indica se a rota já está disponível para uso. */
   ready: boolean;
 };
 
@@ -24,9 +24,9 @@ export const primaryNav: NavItem[] = [
   { label: "Transações", to: "/transacoes", icon: ArrowLeftRight, ready: true },
   { label: "Contas", to: "/contas", icon: Wallet, ready: true },
   { label: "Cartões", to: "/cartoes", icon: CreditCard, ready: true },
-  { label: "Orçamentos", to: "/orcamentos", icon: PiggyBank, ready: false },
-  { label: "Metas", to: "/metas", icon: Target, ready: false },
-  { label: "Calendário", to: "/calendario", icon: CalendarDays, ready: false },
-  { label: "Relatórios", to: "/relatorios", icon: PieChart, ready: false },
+  { label: "Orçamentos", to: "/orcamentos", icon: PiggyBank, ready: true },
+  { label: "Metas", to: "/metas", icon: Target, ready: true },
+  { label: "Calendário", to: "/calendario", icon: CalendarDays, ready: true },
+  { label: "Relatórios", to: "/relatorios", icon: PieChart, ready: true },
   { label: "Configurações", to: "/configuracoes", icon: Settings, ready: true },
 ];
