@@ -14,7 +14,7 @@ import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
-import { downloadCsv, localFileDate } from "@/lib/csvExport";
+import { createCsvFile, localFileDate, saveCsvFile } from "@/lib/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -32,6 +32,8 @@ function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [preparedBackup, setPreparedBackup] = useState<File | null>(null);
+  const [savingBackup, setSavingBackup] = useState(false);
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -90,12 +92,37 @@ function SettingsPage() {
         ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
         ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
       ];
-      downloadCsv(`financas-${localFileDate()}.csv`, ["Tipo de registro", "ID", "Descrição / nome", "Detalhe 1", "Detalhe 2", "Valor", "Data / referência", "Situação", "Vínculo", "Observações"], rows);
-      toast.success("Exportação concluída.");
+      const filename = `financas-${localFileDate()}.csv`;
+      setPreparedBackup(
+        createCsvFile(filename, ["Tipo de registro", "ID", "Descrição / nome", "Detalhe 1", "Detalhe 2", "Valor", "Data / referência", "Situação", "Vínculo", "Observações"], rows),
+      );
+      toast.success("Backup preparado. Agora escolha onde salvar.");
     } catch {
       toast.error("Não foi possível exportar seus dados.");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const savePreparedBackup = async () => {
+    if (!preparedBackup) return;
+    setSavingBackup(true);
+    try {
+      const result = await saveCsvFile(preparedBackup);
+      if (result === "shared") {
+        toast.success("Escolha “Salvar em Arquivos” para definir a pasta do backup.");
+      } else {
+        toast.success(`Backup baixado: ${preparedBackup.name}. Procure-o em Downloads.`);
+      }
+      setPreparedBackup(null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        toast("Salvamento cancelado.");
+      } else {
+        toast.error("Não foi possível salvar o backup.");
+      }
+    } finally {
+      setSavingBackup(false);
     }
   };
 
@@ -188,10 +215,30 @@ function SettingsPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Baixe uma cópia em CSV das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
             </p>
-            <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
-              <Download aria-hidden="true" />
-              {exporting ? "Preparando arquivo..." : "Baixar dados em CSV"}
-            </Button>
+            {preparedBackup ? (
+              <div className="mt-4 space-y-3">
+                <p className="text-sm font-medium text-foreground">
+                  Backup pronto: {preparedBackup.name}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button onClick={savePreparedBackup} disabled={savingBackup}>
+                    <Download aria-hidden="true" />
+                    {savingBackup ? "Abrindo opções..." : "Salvar em Arquivos ou compartilhar"}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setPreparedBackup(null)} disabled={savingBackup}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
+                <Download aria-hidden="true" />
+                {exporting ? "Preparando arquivo..." : "Preparar backup em CSV"}
+              </Button>
+            )}
           </div>
         </div>
       </section>
