@@ -10,8 +10,8 @@ import { brand } from "@/config/brand";
 import { primaryNav } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { useNotifications } from "@/hooks/useNotifications";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
+import { requestNewTransaction } from "@/lib/newTransaction";
 import { cn } from "@/lib/utils";
 
 function initialsOf(name: string) {
@@ -24,7 +24,6 @@ export function AppHeader() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: settings } = useSettings();
-  const { notifications } = useNotifications();
   const updateSettings = useUpdateSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -86,7 +85,7 @@ export function AppHeader() {
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <Button asChild className="hidden md:inline-flex">
-          <Link to="/transacoes" search={{ nova: true }}>
+          <Link to="/transacoes" onClick={requestNewTransaction}>
             <Plus aria-hidden="true" />
             Nova transação
           </Link>
@@ -107,18 +106,8 @@ export function AppHeader() {
           )}
         </Button>
 
-        <Button asChild variant="ghost" size="icon" className="relative" aria-label={`Notificações${notifications.length ? `: ${notifications.length} pendente(s)` : ""}`}>
-          <Link to="/notificacoes">
-            <Bell className="h-5 w-5" aria-hidden="true" />
-            {notifications.length > 0 ? (
-              <span
-                className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground"
-                aria-hidden="true"
-              >
-                {notifications.length > 9 ? "9+" : notifications.length}
-              </span>
-            ) : null}
-          </Link>
+        <Button variant="ghost" size="icon" aria-label="Notificações" disabled>
+          <Bell className="h-5 w-5" aria-hidden="true" />
         </Button>
 
         <Link
