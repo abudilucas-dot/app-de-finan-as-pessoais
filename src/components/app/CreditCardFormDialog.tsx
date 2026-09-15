@@ -69,18 +69,26 @@ export function CreditCardFormDialog({
 
   const saving = createCard.isPending || updateCard.isPending;
 
-  const submit = async (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     const totalLimit = parseMoneyInput(limit);
     const close = Number(closingDay);
     const due = Number(dueDay);
-    if (!name.trim()) return toast.error("Informe um nome para o cartão.");
-    if (totalLimit <= 0) return toast.error("Informe um limite maior que zero.");
+    if (!name.trim()) {
+      toast.error("Informe um nome para o cartão.");
+      return;
+    }
+    if (totalLimit <= 0) {
+      toast.error("Informe um limite maior que zero.");
+      return;
+    }
     if (!Number.isInteger(close) || close < 1 || close > 31) {
-      return toast.error("O dia de fechamento deve estar entre 1 e 31.");
+      toast.error("O dia de fechamento deve estar entre 1 e 31.");
+      return;
     }
     if (!Number.isInteger(due) || due < 1 || due > 31) {
-      return toast.error("O dia de vencimento deve estar entre 1 e 31.");
+      toast.error("O dia de vencimento deve estar entre 1 e 31.");
+      return;
     }
 
     const values = {
