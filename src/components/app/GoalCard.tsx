@@ -5,7 +5,7 @@ import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useDeleteGoalContribution, useGoalContributions } from "@/hooks/useGoals";
-import { formatGoalDate, goalProgress, remainingGoalAmount, type GoalSummary } from "@/lib/goals";
+import { formatGoalDate, goalProgress, remainingGoalAmount, type GoalContribution, type GoalSummary } from "@/lib/goals";
 
 export function GoalCard({
   goal,
@@ -13,12 +13,14 @@ export function GoalCard({
   onEdit,
   onAddContribution,
   onDelete,
+  onEditContribution,
 }: {
   goal: GoalSummary;
   accountNames: Map<string, string>;
   onEdit: (goal: GoalSummary) => void;
   onAddContribution: (goal: GoalSummary) => void;
   onDelete: (goal: GoalSummary) => void;
+  onEditContribution: (goal: GoalSummary, contribution: GoalContribution) => void;
 }) {
   const contributions = useGoalContributions(goal.id);
   const deleteContribution = useDeleteGoalContribution();
@@ -73,7 +75,10 @@ export function GoalCard({
                 <p className="font-medium"><MoneyDisplay value={contribution.amount} /></p>
                 <p className="truncate text-xs text-muted-foreground">{formatGoalDate(contribution.contribution_date)}{contribution.account_id ? ` · ${accountNames.get(contribution.account_id) ?? "Conta"}` : ""}{contribution.notes ? ` · ${contribution.notes}` : ""}</p>
               </div>
-              <Button variant="ghost" size="icon" aria-label="Remover aporte" className="h-8 w-8" disabled={deleteContribution.isPending} onClick={() => removeContribution(contribution.id)}><Trash2 className="h-4 w-4" /></Button>
+              <div className="flex shrink-0">
+                <Button variant="ghost" size="icon" aria-label="Editar aporte" className="h-8 w-8" onClick={() => onEditContribution(goal, contribution)}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="icon" aria-label="Remover aporte" className="h-8 w-8" disabled={deleteContribution.isPending} onClick={() => removeContribution(contribution.id)}><Trash2 className="h-4 w-4" /></Button>
+              </div>
             </li>
           ))}
         </ul>
