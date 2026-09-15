@@ -53,15 +53,30 @@ export function useNotifications() {
     const items: AppNotification[] = [];
 
     for (const rule of recurringRules.data ?? []) {
-      if (rule.next_occurrence > today) continue;
+      if (rule.next_occurrence > nextWeek) continue;
       const isOverdue = rule.next_occurrence < today;
+      const isToday = rule.next_occurrence === today;
+      const isSubscription = rule.is_subscription;
+      const kind = isSubscription ? "subscription" : "scheduled";
+      const title = isSubscription
+        ? isOverdue
+          ? "Assinatura em atraso"
+          : isToday
+            ? "Assinatura vence hoje"
+            : "Assinatura próxima da cobrança"
+        : isOverdue
+          ? "Lançamento em atraso"
+          : isToday
+            ? "Lançamento programado para hoje"
+            : "Lançamento próximo da data programada";
+
       items.push({
-        key: `scheduled:${rule.id}:${rule.next_occurrence}`,
-        kind: "scheduled",
+        key: `${kind}:${rule.id}:${rule.next_occurrence}`,
+        kind,
         priority: isOverdue ? "critical" : "warning",
-        title: isOverdue ? "Lançamento em atraso" : "Lançamento programado para hoje",
-        description: `${rule.description} — ${isOverdue ? `previsto para ${formatScheduledDate(rule.next_occurrence)}` : "registre quando concluir"}.`,
-        to: "/calendario",
+        title,
+        description: `${rule.description} — ${isToday ? "registre quando concluir" : `previsto para ${formatScheduledDate(rule.next_occurrence)}`}.`,
+        to: isSubscription ? "/assinaturas" : "/calendario",
       });
     }
 
