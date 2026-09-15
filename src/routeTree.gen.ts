@@ -21,6 +21,7 @@ import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
 import { Route as AppContasRouteImport } from './routes/_app/contas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppDividasRouteImport } from './routes/_app/dividas'
 import { Route as AppMaisRouteImport } from './routes/_app/mais'
 import { Route as AppLixeiraRouteImport } from './routes/_app/lixeira'
 import { Route as AppMetasRouteImport } from './routes/_app/metas'
@@ -88,6 +89,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDividasRoute = AppDividasRouteImport.update({
+  id: '/dividas',
+  path: '/dividas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMaisRoute = AppMaisRouteImport.update({
   id: '/mais',
   path: '/mais',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AppConfiguracoesRoute
   '/contas': typeof AppContasRoute
   '/dashboard': typeof AppDashboardRoute
+  '/dividas': typeof AppDividasRoute
   '/mais': typeof AppMaisRoute
   '/lixeira': typeof AppLixeiraRoute
   '/metas': typeof AppMetasRoute
@@ -176,6 +183,7 @@ export interface FileRoutesById {
   '/_app/configuracoes': typeof AppConfiguracoesRoute
   '/_app/contas': typeof AppContasRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/dividas': typeof AppDividasRoute
   '/_app/mais': typeof AppMaisRoute
   '/_app/lixeira': typeof AppLixeiraRoute
   '/_app/metas': typeof AppMetasRoute
@@ -198,6 +206,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/contas'
     | '/dashboard'
+    | '/dividas'
     | '/mais'
     | '/lixeira'
     | '/metas'
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/_app/configuracoes'
     | '/_app/contas'
     | '/_app/dashboard'
+    | '/_app/dividas'
     | '/_app/mais'
     | '/_app/metas'
     | '/_app/orcamentos'
@@ -342,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/dividas': {
+      id: '/_app/dividas'
+      path: '/dividas'
+      fullPath: '/dividas'
+      preLoaderRoute: typeof AppDividasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/mais': {
       id: '/_app/mais'
       path: '/mais'
@@ -400,6 +417,7 @@ interface AppRouteChildren {
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppContasRoute: typeof AppContasRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDividasRoute: typeof AppDividasRoute
   AppMaisRoute: typeof AppMaisRoute
   AppLixeiraRoute: typeof AppLixeiraRoute
   AppMetasRoute: typeof AppMetasRoute
@@ -415,6 +433,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppContasRoute: AppContasRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDividasRoute: AppDividasRoute,
   AppMaisRoute: AppMaisRoute,
   AppLixeiraRoute: AppLixeiraRoute,
   AppMetasRoute: AppMetasRoute,
