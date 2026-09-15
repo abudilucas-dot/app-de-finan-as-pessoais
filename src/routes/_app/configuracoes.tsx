@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
 import { localFileDate, saveCsvFile } from "@/lib/csvExport";
-import { createFinanceExcelFile, type ExportSheet } from "@/lib/excelExport";
+import type { ExportSheet } from "@/lib/excelExport";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -266,6 +266,7 @@ function SettingsPage() {
         },
       ];
 
+      const { createFinanceExcelFile } = await import("@/lib/excelExport");
       const filename = `financas-${localFileDate()}.xlsx`;
       setPreparedBackup(
         await createFinanceExcelFile(filename, [
