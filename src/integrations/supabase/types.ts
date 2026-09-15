@@ -537,6 +537,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -559,6 +561,8 @@ export type Database = {
           created_at?: string
           credit_card_id?: string | null
           debit_card_id?: string | null
+          deleted_at?: string | null
+          deletion_reason?: string | null
           description: string
           destination_account_id?: string | null
           id?: string
@@ -581,6 +585,8 @@ export type Database = {
           created_at?: string
           credit_card_id?: string | null
           debit_card_id?: string | null
+          deleted_at?: string | null
+          deletion_reason?: string | null
           description?: string
           destination_account_id?: string | null
           id?: string
@@ -774,6 +780,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -812,6 +820,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -851,6 +861,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -894,6 +906,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -934,6 +948,8 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
           description: string
           destination_account_id: string | null
           id: string
@@ -956,6 +972,11 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      restore_transaction: {
+        Args: { p_transaction_id: string }
+        Returns: number
+      }
+      trash_transaction: { Args: { p_transaction_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
