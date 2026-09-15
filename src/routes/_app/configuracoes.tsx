@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
 import { localFileDate, saveCsvFile } from "@/lib/csvExport";
-import type { ExportSheet } from "@/lib/excelExport";
+import { createFinanceReportFile, type ExportSection } from "@/lib/financialReport";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
@@ -115,7 +115,7 @@ function SettingsPage() {
         .filter((item) => item.type === "expense" && item.status === "confirmed")
         .reduce((total, item) => total + Number(item.amount ?? 0), 0);
 
-      const sheets: ExportSheet[] = [
+      const sections: ExportSection[] = [
         {
           name: "Movimentações",
           columns: [
@@ -266,19 +266,18 @@ function SettingsPage() {
         },
       ];
 
-      const { createFinanceExcelFile } = await import("@/lib/excelExport");
-      const filename = `financas-${localFileDate()}.xlsx`;
+      const filename = `financas-${localFileDate()}.html`;
       setPreparedBackup(
-        await createFinanceExcelFile(filename, [
+        createFinanceReportFile(filename, [
           ["Contas cadastradas", accounts.data?.length ?? 0],
           ["Cartões cadastrados", (creditCards.data?.length ?? 0) + (debitCards.data?.length ?? 0)],
           ["Movimentações ativas", activeTransactions.length],
           ["Receitas confirmadas", totalIncome],
           ["Despesas confirmadas", totalExpenses],
           ["Metas cadastradas", goals.data?.length ?? 0],
-        ], sheets),
+        ], sections),
       );
-      toast.success("Planilha preparada. Agora escolha onde salvar.");
+      toast.success("Relatório preparado. Agora escolha onde salvar.");
     } catch {
       toast.error("Não foi possível preparar sua planilha.");
     } finally {
@@ -395,12 +394,12 @@ function SettingsPage() {
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe uma planilha Excel organizada, com abas separadas para cada área das suas finanças.
+              Baixe um relatório organizado, com seções separadas para cada área das suas finanças.
             </p>
             {preparedBackup ? (
               <div className="mt-4 space-y-3">
                 <p className="text-sm font-medium text-foreground">
-                  Planilha pronta: {preparedBackup.name}
+                  Relatório pronto: {preparedBackup.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
@@ -418,7 +417,7 @@ function SettingsPage() {
             ) : (
               <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
                 <Download aria-hidden="true" />
-                {exporting ? "Preparando arquivo..." : "Preparar planilha Excel"}
+                {exporting ? "Preparando arquivo..." : "Preparar relatório financeiro"}
               </Button>
             )}
           </div>
