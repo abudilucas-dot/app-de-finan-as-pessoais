@@ -19,7 +19,6 @@ function invalidateCardFinancialData(
   queryClient.invalidateQueries({ queryKey: ["credit_card_invoices", userId] });
   queryClient.invalidateQueries({ queryKey: ["transactions", userId] });
   queryClient.invalidateQueries({ queryKey: ["account_balances", userId] });
-  queryClient.invalidateQueries({ queryKey: ["budget_summaries", userId] });
 }
 
 export function useCreditCards() {
@@ -123,6 +122,7 @@ export function useCreateCardExpense() {
       totalInstallments: number;
       notes?: string | null;
     }) => {
+      const notes = values.notes?.trim();
       const { data, error } = await supabase.rpc("create_card_installment_expense", {
         p_credit_card_id: values.creditCardId,
         p_description: values.description,
@@ -130,7 +130,7 @@ export function useCreateCardExpense() {
         p_category_id: values.categoryId,
         p_transaction_date: values.transactionDate,
         p_total_installments: values.totalInstallments,
-        p_notes: values.notes?.trim() || undefined,
+        ...(notes ? { p_notes: notes } : {}),
       });
       if (error) throw error;
       return data as FinancialTransaction[];
@@ -153,20 +153,6 @@ export function useDeleteCreditCardPurchase() {
   });
 }
 
-export function useDeleteCreditCardPayment() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (transactionId: string) => {
-      const { error } = await supabase.rpc("delete_credit_card_payment", {
-        p_transaction_id: transactionId,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
-  });
-}
-
 export function useReplaceCreditCardPurchase() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -181,6 +167,7 @@ export function useReplaceCreditCardPurchase() {
       totalInstallments: number;
       notes?: string | null;
     }) => {
+      const notes = values.notes?.trim();
       const { data, error } = await supabase.rpc("replace_credit_card_purchase", {
         p_transaction_id: values.transactionId,
         p_credit_card_id: values.creditCardId,
@@ -189,7 +176,7 @@ export function useReplaceCreditCardPurchase() {
         p_category_id: values.categoryId,
         p_transaction_date: values.transactionDate,
         p_total_installments: values.totalInstallments,
-        p_notes: values.notes?.trim() || undefined,
+        ...(notes ? { p_notes: notes } : {}),
       });
       if (error) throw error;
       return data as FinancialTransaction[];
