@@ -93,7 +93,7 @@ function SettingsPage() {
         ...(budgets.data ?? []).map((item) => ["Orçamento", item.id, item.category_id, item.period_start, "", item.amount_limit, "", "", "", ""]),
         ...(goals.data ?? []).map((item) => ["Meta", item.id, item.name, item.status, item.target_date ?? "", item.target_amount, "", "", "", ""]),
         ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
-        ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
+        ...(recurrences.data ?? []).map((item) => [item.is_subscription ? "Assinatura" : "Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
         ...(debts.data ?? []).map((item) => ["Dívida", item.id, item.name, item.institution ?? "", item.status, item.remaining_amount, item.next_due_date ?? "", item.total_installments ? `${item.total_installments} parcelas` : "", item.interest_rate ?? "", item.notes ?? ""]),
         ...(debtPayments.data ?? []).map((item) => ["Pagamento de dívida", item.id, item.debt_id, item.payment_date, "", item.amount, item.account_id, "", item.transaction_id, item.notes ?? ""]),
       ];
