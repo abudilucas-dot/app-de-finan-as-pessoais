@@ -26,14 +26,17 @@ export function RecurringRuleFormDialog({
   rule,
   accounts,
   categories,
+  mode = "recurrence",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rule?: RecurringRule | null;
   accounts: Account[];
   categories: Category[];
+  mode?: "recurrence" | "subscription";
 }) {
   const createRule = useCreateRecurringRule();
+  const isSubscription = mode === "subscription" || Boolean(rule?.is_subscription);
   const updateRule = useUpdateRecurringRule();
   const [type, setType] = useState<"income" | "expense">("expense");
   const [description, setDescription] = useState("");
@@ -56,7 +59,7 @@ export function RecurringRuleFormDialog({
 
   useEffect(() => {
     if (!open) return;
-    setType(rule?.type ?? "expense");
+    setType(isSubscription ? "expense" : (rule?.type ?? "expense"));
     setDescription(rule?.description ?? "");
     setAmount(rule ? moneyInputFromNumber(rule.amount) : "0,00");
     setCategoryId(rule?.category_id ?? "none");
@@ -65,7 +68,7 @@ export function RecurringRuleFormDialog({
     setNextOccurrence(rule?.next_occurrence ?? todayDate());
     setEndDate(rule?.end_date ?? "");
     setNotes(rule?.notes ?? "");
-  }, [accounts, open, rule]);
+  }, [accounts, isSubscription, open, rule]);
 
   const saving = createRule.isPending || updateRule.isPending;
 
@@ -94,12 +97,13 @@ export function RecurringRuleFormDialog({
       next_occurrence: nextOccurrence,
       end_date: endDate || null,
       notes: notes.trim() || null,
+      is_subscription: isSubscription,
     };
 
     try {
       if (rule) await updateRule.mutateAsync({ id: rule.id, values });
       else await createRule.mutateAsync(values);
-      toast.success(rule ? "Conta programada atualizada." : "Conta programada criada.");
+      toast.success(rule ? (isSubscription ? "Assinatura atualizada." : "Conta programada atualizada.") : (isSubscription ? "Assinatura criada." : "Conta programada criada."));
       onOpenChange(false);
     } catch {
       toast.error("Não foi possível salvar a conta programada.");
@@ -110,14 +114,14 @@ export function RecurringRuleFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{rule ? "Editar conta programada" : "Nova conta programada"}</DialogTitle>
+          <DialogTitle>{rule ? (isSubscription ? "Editar assinatura" : "Editar conta programada") : (isSubscription ? "Nova assinatura" : "Nova conta programada")}</DialogTitle>
           <DialogDescription>
-            O lançamento só altera seus dados financeiros quando você confirmá-lo como pago ou recebido.
+            {isSubscription ? "A cobrança só altera seu saldo quando você confirmá-la como paga." : "O lançamento só altera seus dados financeiros quando você confirmá-lo como pago ou recebido."}
           </DialogDescription>
         </DialogHeader>
 
         <form className="space-y-5" onSubmit={submit}>
-          <fieldset className="space-y-2">
+          {!isSubscription ? <fieldset className="space-y-2">
             <legend className="text-sm font-medium">Tipo</legend>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -143,11 +147,11 @@ export function RecurringRuleFormDialog({
                 </button>
               ))}
             </div>
-          </fieldset>
+          </fieldset> : null}
 
           <div className="space-y-2">
             <Label htmlFor="recurring-description">Descrição</Label>
-            <Input id="recurring-description" required maxLength={140} autoFocus value={description} onChange={(event) => setDescription(event.target.value)} placeholder={type === "income" ? "Ex.: Salário" : "Ex.: Internet"} />
+            <Input id="recurring-description" required maxLength={140} autoFocus value={description} onChange={(event) => setDescription(event.target.value)} placeholder={isSubscription ? "Ex.: Netflix" : (type === "income" ? "Ex.: Salário" : "Ex.: Internet")} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -188,7 +192,7 @@ export function RecurringRuleFormDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="recurring-next-date">Primeira ocorrência</Label>
+              <Label htmlFor="recurring-next-date">{isSubscription ? "Próxima cobrança" : "Primeira ocorrência"}</Label>
               <Input id="recurring-next-date" type="date" required value={nextOccurrence} onChange={(event) => setNextOccurrence(event.target.value)} />
             </div>
             <div className="space-y-2">
@@ -204,7 +208,7 @@ export function RecurringRuleFormDialog({
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-            <Button type="submit" disabled={saving || availableAccounts.length === 0}>{saving ? "Salvando..." : "Salvar programação"}</Button>
+            <Button type="submit" disabled={saving || availableAccounts.length === 0}>{saving ? "Salvando..." : (isSubscription ? "Salvar assinatura" : "Salvar programação")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
