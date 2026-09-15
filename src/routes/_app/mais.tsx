@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CreditCard, Settings, Target, Wallet } from "lucide-react";
+import { CreditCard, Settings, Target, Trash2, Wallet } from "lucide-react";
 
 import { PageHeader } from "@/components/app/PageHeader";
 
@@ -11,6 +11,7 @@ const links = [
   { to: "/contas", label: "Contas", description: "Gerencie bancos e carteiras", icon: Wallet },
   { to: "/cartoes", label: "Cartões", description: "Controle limites, faturas e parcelas", icon: CreditCard },
   { to: "/metas", label: "Metas", description: "Acompanhe objetivos e aportes", icon: Target },
+  { to: "/lixeira", label: "Lixeira", description: "Restaure movimentações excluídas", icon: Trash2 },
   {
     to: "/configuracoes",
     label: "Configurações",
