@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeftRight, Plus } from "lucide-react";
+import { ArrowLeftRight, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
@@ -29,7 +37,9 @@ import { useDeleteTransaction, useTransactions } from "@/hooks/useTransactions";
 import { consumeNewTransactionRequest, newTransactionEventName } from "@/lib/newTransaction";
 import {
   type FinancialTransaction,
+  type TransactionStatus,
   type TransactionType,
+  TRANSACTION_STATUS_LABELS,
   TRANSACTION_TYPE_LABELS,
   calculateMonthlySummary,
 } from "@/lib/transactions";
@@ -45,7 +55,42 @@ const FILTERS: { value: "all" | TransactionType; label: string }[] = [
   { value: "income", label: "Receitas" },
   { value: "expense", label: "Despesas" },
   { value: "transfer", label: "Transferências" },
+  { value: "card_payment", label: "Faturas" },
 ];
+
+const STATUS_FILTERS: { value: "all" | TransactionStatus; label: string }[] = [
+  { value: "all", label: "Todos os status" },
+  { value: "confirmed", label: "Confirmadas" },
+  { value: "pending", label: "Pendentes" },
+  { value: "overdue", label: "Atrasadas" },
+  { value: "cancelled", label: "Canceladas" },
+];
+
+type SourceFilter = "all" | `account:${string}` | `credit:${string}` | `debit:${string}`;
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function currentMonthStart() {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
+function calculateFilteredResult(transactions: FinancialTransaction[]) {
+  return transactions.reduce(
+    (total, transaction) => {
+      if (transaction.status !== "confirmed") return total;
+      if (transaction.type === "income") total.income += Number(transaction.amount);
+      if (transaction.type === "expense") total.expense += Number(transaction.amount);
+      return total;
+    },
+    { income: 0, expense: 0 },
+  );
+}
 
 function toCardPurchaseDraft(
   transaction: FinancialTransaction,
@@ -80,6 +125,12 @@ function TransactionsPage() {
   const deleteTransaction = useDeleteTransaction();
   const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
   const [filter, setFilter] = useState<"all" | TransactionType>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | TransactionStatus>("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
+  const [query, setQuery] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
@@ -144,11 +195,79 @@ function TransactionsPage() {
   }
 
   const transactionList = transactions.data ?? [];
-  const filteredTransactions = transactionList.filter(
-    (transaction) => filter === "all" || transaction.type === filter,
-  );
+  const filteredTransactions = transactionList.filter((transaction) => {
+    if (filter !== "all" && transaction.type !== filter) return false;
+    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+    if (categoryFilter !== "all" && transaction.category_id !== categoryFilter) return false;
+    if (startDate && transaction.transaction_date < startDate) return false;
+    if (endDate && transaction.transaction_date > endDate) return false;
+
+    if (sourceFilter !== "all") {
+      const [sourceType, sourceId] = sourceFilter.split(":");
+      const matchesSource =
+        (sourceType === "account" &&
+          (transaction.account_id === sourceId ||
+            transaction.destination_account_id === sourceId)) ||
+        (sourceType === "credit" && transaction.credit_card_id === sourceId) ||
+        (sourceType === "debit" && transaction.debit_card_id === sourceId);
+      if (!matchesSource) return false;
+    }
+
+    const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+    if (!normalizedQuery) return true;
+    const searchableText = [
+      transaction.description,
+      transaction.notes,
+      transaction.category_id ? categoryMap.get(transaction.category_id) : undefined,
+      transaction.account_id ? accountMap.get(transaction.account_id) : undefined,
+      transaction.destination_account_id
+        ? accountMap.get(transaction.destination_account_id)
+        : undefined,
+      transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined,
+      transaction.debit_card_id ? debitCardMap.get(transaction.debit_card_id) : undefined,
+      TRANSACTION_TYPE_LABELS[transaction.type],
+      TRANSACTION_STATUS_LABELS[transaction.status],
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("pt-BR");
+
+    return searchableText.includes(normalizedQuery);
+  });
   const summary = calculateMonthlySummary(transactionList);
+  const filteredSummary = calculateFilteredResult(filteredTransactions);
   const activeAccounts = (accounts.data ?? []).filter((account) => !account.is_archived);
+  const hasActiveFilters = Boolean(
+    filter !== "all" ||
+    statusFilter !== "all" ||
+    categoryFilter !== "all" ||
+    sourceFilter !== "all" ||
+    query.trim() ||
+    startDate ||
+    endDate,
+  );
+
+  const clearFilters = () => {
+    setFilter("all");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setSourceFilter("all");
+    setQuery("");
+    setStartDate("");
+    setEndDate("");
+  };
+
+  const setCurrentMonth = () => {
+    setStartDate(currentMonthStart());
+    setEndDate(formatLocalDate(new Date()));
+  };
+
+  const setLastThirtyDays = () => {
+    const start = new Date();
+    start.setDate(start.getDate() - 29);
+    setStartDate(formatLocalDate(start));
+    setEndDate(formatLocalDate(new Date()));
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -241,28 +360,181 @@ function TransactionsPage() {
         />
       ) : (
         <section className="surface p-4 sm:p-6">
-          <div
-            className="mb-3 flex gap-2 overflow-x-auto pb-2"
-            role="tablist"
-            aria-label="Filtrar transações"
-          >
-            {FILTERS.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                role="tab"
-                aria-selected={filter === item.value}
-                onClick={() => setFilter(item.value)}
-                className={cn(
-                  "min-h-10 shrink-0 rounded-full px-4 text-sm font-medium transition-colors",
-                  filter === item.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
+          <div className="mb-5 space-y-4 border-b pb-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
+                Filtrar movimentações
+              </div>
+              {hasActiveFilters ? (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X aria-hidden="true" />
+                  Limpar filtros
+                </Button>
+              ) : null}
+            </div>
+
+            <div className="relative">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar por descrição, categoria, conta ou cartão"
+                aria-label="Buscar movimentações"
+                className="min-h-11 pl-9"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Período rápido">
+              <Button variant="outline" size="sm" onClick={setCurrentMonth}>
+                Este mês
+              </Button>
+              <Button variant="outline" size="sm" onClick={setLastThirtyDays}>
+                Últimos 30 dias
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                }}
               >
-                {item.label}
-              </button>
-            ))}
+                Todo o período
+              </Button>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>De</span>
+                <Input
+                  type="date"
+                  value={startDate}
+                  max={endDate || undefined}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  className="min-h-11"
+                />
+              </label>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>Até</span>
+                <Input
+                  type="date"
+                  value={endDate}
+                  min={startDate || undefined}
+                  onChange={(event) => setEndDate(event.target.value)}
+                  className="min-h-11"
+                />
+              </label>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>Categoria</span>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="min-h-11">
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    {(categories.data ?? []).map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>Status</span>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value as "all" | TransactionStatus)}
+                >
+                  <SelectTrigger className="min-h-11">
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_FILTERS.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+            </div>
+
+            <label className="block space-y-1.5 text-sm font-medium">
+              <span>Conta ou cartão</span>
+              <Select
+                value={sourceFilter}
+                onValueChange={(value) => setSourceFilter(value as SourceFilter)}
+              >
+                <SelectTrigger className="min-h-11">
+                  <SelectValue placeholder="Todas as contas e cartões" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as contas e cartões</SelectItem>
+                  {activeAccounts.map((account) => (
+                    <SelectItem key={`account:${account.id}`} value={`account:${account.id}`}>
+                      Conta · {account.name}
+                    </SelectItem>
+                  ))}
+                  {(cards.data ?? [])
+                    .filter((card) => !card.is_archived)
+                    .map((card) => (
+                      <SelectItem key={`credit:${card.id}`} value={`credit:${card.id}`}>
+                        Crédito · {card.name}
+                      </SelectItem>
+                    ))}
+                  {(debitCards.data ?? [])
+                    .filter((card) => !card.is_archived)
+                    .map((card) => (
+                      <SelectItem key={`debit:${card.id}`} value={`debit:${card.id}`}>
+                        Débito · {card.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </label>
+
+            <div
+              className="flex gap-2 overflow-x-auto pb-1"
+              role="tablist"
+              aria-label="Filtrar por tipo de transação"
+            >
+              {FILTERS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === item.value}
+                  onClick={() => setFilter(item.value)}
+                  className={cn(
+                    "min-h-10 shrink-0 rounded-full px-4 text-sm font-medium transition-colors",
+                    filter === item.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <p>
+              {filteredTransactions.length}{" "}
+              {filteredTransactions.length === 1
+                ? "movimentação encontrada"
+                : "movimentações encontradas"}
+            </p>
+            <p className="flex items-center gap-1">
+              Resultado confirmado:
+              <MoneyDisplay value={filteredSummary.income - filteredSummary.expense} signed />
+            </p>
           </div>
 
           {filteredTransactions.length ? (
@@ -300,13 +572,21 @@ function TransactionsPage() {
           ) : (
             <EmptyState
               icon={ArrowLeftRight}
-              title={
-                filter === "all"
-                  ? "Nenhuma movimentação"
-                  : `Nenhuma ${TRANSACTION_TYPE_LABELS[filter].toLowerCase()}`
+              title={!hasActiveFilters ? "Nenhuma movimentação" : "Nenhuma movimentação encontrada"}
+              description={
+                hasActiveFilters
+                  ? "Altere ou limpe os filtros para ver outras movimentações."
+                  : "Adicione uma movimentação para começar a acompanhar seus números."
               }
-              description="Adicione uma movimentação para começar a acompanhar seus números."
-              action={<Button onClick={openCreate}>Adicionar movimentação</Button>}
+              action={
+                hasActiveFilters ? (
+                  <Button variant="outline" onClick={clearFilters}>
+                    Limpar filtros
+                  </Button>
+                ) : (
+                  <Button onClick={openCreate}>Adicionar movimentação</Button>
+                )
+              }
               className="border-0 shadow-none"
             />
           )}
