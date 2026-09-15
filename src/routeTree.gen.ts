@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'
 import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
@@ -63,6 +64,11 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppAssinaturasRoute = AppAssinaturasRouteImport.update({
+  id: '/assinaturas',
+  path: '/assinaturas',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppCalendarioRoute = AppCalendarioRouteImport.update({
   id: '/calendario',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/assinaturas': typeof AppAssinaturasRoute
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
   '/configuracoes': typeof AppConfiguracoesRoute
@@ -178,6 +185,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/_app/assinaturas': typeof AppAssinaturasRoute
   '/_app/calendario': typeof AppCalendarioRoute
   '/_app/cartoes': typeof AppCartoesRoute
   '/_app/configuracoes': typeof AppConfiguracoesRoute
@@ -201,6 +209,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/assinaturas'
     | '/calendario'
     | '/cartoes'
     | '/configuracoes'
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/_app/assinaturas'
     | '/_app/calendario'
     | '/_app/cartoes'
     | '/_app/configuracoes'
@@ -317,7 +327,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/calendario': {
+    '/_app/assinaturas': {
+    id: '/_app/assinaturas'
+    path: '/assinaturas'
+    fullPath: '/assinaturas'
+    preLoaderRoute: typeof AppAssinaturasRouteImport
+    parentRoute: typeof AppRoute
+  }
+  '/_app/calendario': {
       id: '/_app/calendario'
       path: '/calendario'
       fullPath: '/calendario'
@@ -412,6 +429,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAssinaturasRoute: typeof AppAssinaturasRoute
   AppCalendarioRoute: typeof AppCalendarioRoute
   AppCartoesRoute: typeof AppCartoesRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
@@ -428,6 +446,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAssinaturasRoute: AppAssinaturasRoute,
   AppCalendarioRoute: AppCalendarioRoute,
   AppCartoesRoute: AppCartoesRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
