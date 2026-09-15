@@ -298,6 +298,135 @@ export type Database = {
           },
         ]
       }
+      debt_payments: {
+        Row: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount: number
+          created_at?: string
+          debt_id: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          created_at?: string
+          debt_id?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "debt_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "financial_debt_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "financial_debts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_debts: {
+        Row: {
+          color: string | null
+          created_at: string
+          due_day: number | null
+          id: string
+          initial_amount: number
+          installment_amount: number | null
+          institution: string | null
+          interest_rate: number | null
+          name: string
+          next_due_date: string | null
+          notes: string | null
+          remaining_amount: number
+          status: string
+          total_installments: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          due_day?: number | null
+          id?: string
+          initial_amount: number
+          installment_amount?: number | null
+          institution?: string | null
+          interest_rate?: number | null
+          name: string
+          next_due_date?: string | null
+          notes?: string | null
+          remaining_amount: number
+          status?: string
+          total_installments?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          due_day?: number | null
+          id?: string
+          initial_amount?: number
+          installment_amount?: number | null
+          institution?: string | null
+          interest_rate?: number | null
+          name?: string
+          next_due_date?: string | null
+          notes?: string | null
+          remaining_amount?: number
+          status?: string
+          total_installments?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       financial_goals: {
         Row: {
           color: string | null
@@ -537,6 +666,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
@@ -561,6 +691,7 @@ export type Database = {
           created_at?: string
           credit_card_id?: string | null
           debit_card_id?: string | null
+          debt_id?: string | null
           deleted_at?: string | null
           deletion_reason?: string | null
           description: string
@@ -585,6 +716,7 @@ export type Database = {
           created_at?: string
           credit_card_id?: string | null
           debit_card_id?: string | null
+          debt_id?: string | null
           deleted_at?: string | null
           deletion_reason?: string | null
           description?: string
@@ -643,6 +775,20 @@ export type Database = {
             columns: ["debit_card_id"]
             isOneToOne: false
             referencedRelation: "debit_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "financial_debt_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "financial_debts"
             referencedColumns: ["id"]
           },
           {
@@ -750,6 +896,29 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_debt_summaries: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          due_day: number | null
+          id: string | null
+          initial_amount: number | null
+          installment_amount: number | null
+          institution: string | null
+          interest_rate: number | null
+          name: string | null
+          next_due_date: string | null
+          notes: string | null
+          paid_amount: number | null
+          payment_count: number | null
+          remaining_amount: number | null
+          status: string | null
+          total_installments: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       financial_goal_summaries: {
         Row: {
           color: string | null
@@ -780,6 +949,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
@@ -820,6 +990,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
@@ -861,6 +1032,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
@@ -885,6 +1057,32 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      create_debt_payment: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_debt_id: string
+          p_notes?: string
+          p_payment_date?: string
+        }
+        Returns: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          transaction_id: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "debt_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_credit_card_payment: {
         Args: { p_transaction_id: string }
         Returns: number
@@ -893,6 +1091,7 @@ export type Database = {
         Args: { p_transaction_id: string }
         Returns: number
       }
+      delete_debt_payment: { Args: { p_payment_id: string }; Returns: number }
       pay_credit_card_invoice: {
         Args: {
           p_account_id: string
@@ -906,6 +1105,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
@@ -948,6 +1148,7 @@ export type Database = {
           created_at: string
           credit_card_id: string | null
           debit_card_id: string | null
+          debt_id: string | null
           deleted_at: string | null
           deletion_reason: string | null
           description: string
