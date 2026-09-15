@@ -1,10 +1,14 @@
 /**
- * URL canônica usada nos fluxos de autenticação por e-mail.
- * Previews da Vercel não devem ser usados como destino de confirmação.
- * Defina VITE_APP_URL na Vercel quando um domínio próprio for adotado.
+ * URLs canônicas para fluxos de autenticação por e-mail.
+ * O retorno sempre prefere o mesmo domínio que a pessoa está usando.
+ * No servidor, VITE_APP_URL (ou a URL de produção abaixo) é usada como fallback.
  */
 const fallbackAppUrl = "https://app-de-finan-as-pessoais-ten.vercel.app";
 
 export const appUrl = (import.meta.env.VITE_APP_URL || fallbackAppUrl).replace(/\/$/, "");
 
-export const emailConfirmationRedirectUrl = `${appUrl}/login?confirmed=1`;
+export function emailConfirmationRedirectUrl() {
+  const currentOrigin = typeof window === "undefined" ? null : window.location.origin;
+  const origin = currentOrigin && currentOrigin !== "null" ? currentOrigin : appUrl;
+  return `${origin}/login?confirmed=1`;
+}
