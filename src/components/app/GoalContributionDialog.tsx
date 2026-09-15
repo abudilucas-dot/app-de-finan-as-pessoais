@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Account } from "@/hooks/useAccounts";
-import { useCreateGoalContribution } from "@/hooks/useGoals";
-import { todayDate, type GoalSummary } from "@/lib/goals";
+import { useCreateGoalContribution, useUpdateGoalContribution } from "@/hooks/useGoals";
+import { todayDate, type GoalContribution, type GoalSummary } from "@/lib/goals";
 import { maskMoneyInput, parseMoneyInput } from "@/lib/money";
 
 export function GoalContributionDialog({
@@ -16,13 +16,17 @@ export function GoalContributionDialog({
   onOpenChange,
   goal,
   accounts,
+  contribution,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   goal: GoalSummary | null;
   accounts: Account[];
+  contribution?: GoalContribution | null;
 }) {
   const createContribution = useCreateGoalContribution();
+  const updateContribution = useUpdateGoalContribution();
+  const isEditing = Boolean(contribution);
   const [amount, setAmount] = useState("0,00");
   const [date, setDate] = useState(todayDate());
   const [accountId, setAccountId] = useState("none");
@@ -30,11 +34,11 @@ export function GoalContributionDialog({
 
   useEffect(() => {
     if (!open) return;
-    setAmount("0,00");
-    setDate(todayDate());
-    setAccountId("none");
-    setNotes("");
-  }, [open, goal?.id]);
+    setAmount(contribution ? maskMoneyInput(String(Math.round(Number(contribution.amount) * 100))) : "0,00");
+    setDate(contribution?.contribution_date ?? todayDate());
+    setAccountId(contribution?.account_id ?? "none");
+    setNotes(contribution?.notes ?? "");
+  }, [open, goal?.id, contribution]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -43,14 +47,19 @@ export function GoalContributionDialog({
     if (value <= 0) return toast.error("Informe um aporte maior que zero.");
 
     try {
-      await createContribution.mutateAsync({
-        goal_id: goal.id,
+      const values = {
         amount: value,
         contribution_date: date,
         account_id: accountId === "none" ? null : accountId,
         notes: notes.trim() || null,
-      });
-      toast.success("Aporte adicionado à meta.");
+      };
+      if (contribution) {
+        await updateContribution.mutateAsync({ id: contribution.id, values });
+        toast.success("Aporte atualizado.");
+      } else {
+        await createContribution.mutateAsync({ goal_id: goal.id, ...values });
+        toast.success("Aporte adicionado à meta.");
+      }
       onOpenChange(false);
     } catch {
       toast.error("Não foi possível adicionar o aporte.");
@@ -63,8 +72,8 @@ export function GoalContributionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Adicionar aporte</DialogTitle>
-          <DialogDescription>{goal ? `Registre quanto você separou para “${goal.name}”.` : "Registre o valor reservado."}</DialogDescription>
+          <DialogTitle>{isEditing ? "Editar aporte" : "Adicionar aporte"}</DialogTitle>
+          <DialogDescription>{goal ? (isEditing ? `Atualize o aporte de “${goal.name}”.` : `Registre quanto você separou para “${goal.name}”.`) : "Registre o valor reservado."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-5" onSubmit={submit}>
           <div className="space-y-2">
@@ -94,8 +103,8 @@ export function GoalContributionDialog({
             <Input id="contribution-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: dinheiro separado do salário" maxLength={240} />
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createContribution.isPending}>Cancelar</Button>
-            <Button type="submit" disabled={createContribution.isPending}>{createContribution.isPending ? "Salvando..." : "Adicionar aporte"}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createContribution.isPending || updateContribution.isPending}>Cancelar</Button>
+            <Button type="submit" disabled={createContribution.isPending || updateContribution.isPending}>{createContribution.isPending || updateContribution.isPending ? "Salvando..." : isEditing ? "Salvar alterações" : "Adicionar aporte"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
