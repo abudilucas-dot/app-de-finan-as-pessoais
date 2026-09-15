@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { requestNewTransaction } from "@/lib/newTransaction";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -71,8 +72,10 @@ export function MobileNavigation() {
           <div className="px-4 pb-8">
             <Link
               to="/transacoes"
-              search={{ nova: true }}
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                requestNewTransaction();
+                setOpen(false);
+              }}
               className="flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               Adicionar movimentação
