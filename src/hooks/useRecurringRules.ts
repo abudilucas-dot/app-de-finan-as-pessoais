@@ -7,8 +7,8 @@ import type { RecurringRule, RecurringRuleInput } from "@/lib/recurringRules";
 function invalidateFinancialData(queryClient: ReturnType<typeof useQueryClient>, userId?: string) {
   queryClient.invalidateQueries({ queryKey: ["recurring-rules", userId] });
   queryClient.invalidateQueries({ queryKey: ["transactions", userId] });
-  queryClient.invalidateQueries({ queryKey: ["account-balances", userId] });
-  queryClient.invalidateQueries({ queryKey: ["budget-summaries", userId] });
+  queryClient.invalidateQueries({ queryKey: ["account_balances", userId] });
+  queryClient.invalidateQueries({ queryKey: ["budget_summaries", userId] });
 }
 
 export function useRecurringRules() {
