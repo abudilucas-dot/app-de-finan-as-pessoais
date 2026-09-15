@@ -19,13 +19,14 @@ export type RecurringRule = {
   end_date: string | null;
   notes: string | null;
   active: boolean;
+  is_subscription: boolean;
   created_at: string;
   updated_at: string;
 };
 
 export type RecurringRuleInput = Pick<
   RecurringRule,
-  "description" | "amount" | "type" | "category_id" | "account_id" | "frequency" | "next_occurrence" | "end_date" | "notes"
+  "description" | "amount" | "type" | "category_id" | "account_id" | "frequency" | "next_occurrence" | "end_date" | "notes" | "is_subscription"
 >;
 
 export const recurringFrequencyLabels: Record<RecurringFrequency, string> = {
@@ -54,4 +55,16 @@ export function getScheduledDateLabel(date: string) {
   if (date < today) return "Em atraso";
   if (date === today) return "Hoje";
   return formatScheduledDate(date);
+}
+
+export function monthlyEquivalent(amount: number, frequency: RecurringFrequency) {
+  const multipliers: Record<RecurringFrequency, number> = {
+    weekly: 52 / 12,
+    biweekly: 26 / 12,
+    monthly: 1,
+    quarterly: 1 / 3,
+    semiannual: 1 / 6,
+    annual: 1 / 12,
+  };
+  return Number(amount) * multipliers[frequency];
 }
