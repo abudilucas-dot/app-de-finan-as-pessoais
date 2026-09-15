@@ -75,16 +75,29 @@ export function CardExpenseDialog({
 
   const saving = createExpense.isPending || replaceExpense.isPending;
 
-  const submit = async (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     const numericAmount = parseMoneyInput(amount);
-    if (!cardId) return toast.error("Selecione um cartão.");
-    if (!description.trim()) return toast.error("Informe uma descrição.");
-    if (numericAmount <= 0) return toast.error("Informe um valor maior que zero.");
-    if (!categoryId) return toast.error("Selecione uma categoria.");
+    if (!cardId) {
+      toast.error("Selecione um cartão.");
+      return;
+    }
+    if (!description.trim()) {
+      toast.error("Informe uma descrição.");
+      return;
+    }
+    if (numericAmount <= 0) {
+      toast.error("Informe um valor maior que zero.");
+      return;
+    }
+    if (!categoryId) {
+      toast.error("Selecione uma categoria.");
+      return;
+    }
     const installments = Number(totalInstallments);
     if (!Number.isInteger(installments) || installments < 1 || installments > 60) {
-      return toast.error("Informe entre 1 e 60 parcelas.");
+      toast.error("Informe entre 1 e 60 parcelas.");
+      return;
     }
     try {
       const values = {
