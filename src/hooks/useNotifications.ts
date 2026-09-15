@@ -6,6 +6,7 @@ import { useBudgetSummaries } from "@/hooks/useBudgets";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreditCardInvoices, useCreditCards } from "@/hooks/useCreditCards";
 import { useGoalSummaries } from "@/hooks/useGoals";
+import { useDebtSummaries } from "@/hooks/useDebts";
 import { useRecurringRules } from "@/hooks/useRecurringRules";
 import { useTransactions } from "@/hooks/useTransactions";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ export function useNotifications() {
   const budgets = useBudgetSummaries(periodStart());
   const goals = useGoalSummaries();
   const categories = useCategories("expense");
+  const debts = useDebtSummaries();
 
   const dismissals = useQuery({
     queryKey: ["notification-dismissals", user?.id],
@@ -92,6 +94,19 @@ export function useNotifications() {
       });
     }
 
+    for (const debt of debts.data ?? []) {
+      if (debt.status !== "active" || !debt.next_due_date || debt.next_due_date > nextWeek) continue;
+      const isOverdue = debt.next_due_date < today;
+      items.push({
+        key: `debt:${debt.id}:${debt.next_due_date}`,
+        kind: "debt",
+        priority: isOverdue ? "critical" : "warning",
+        title: isOverdue ? `Dívida em atraso: ${debt.name}` : `Dívida próxima do vencimento: ${debt.name}`,
+        description: `${isOverdue ? "Venceu" : "Vence"} em ${formatShortDate(debt.next_due_date)}.`,
+        to: "/dividas",
+      });
+    }
+
     const categoryById = new Map((categories.data ?? []).map((category) => [category.id, category]));
     for (const budget of budgets.data ?? []) {
       const percentage = budgetPercentage(Number(budget.spent_amount), Number(budget.amount_limit));
@@ -130,6 +145,7 @@ export function useNotifications() {
     budgets.data,
     categories.data,
     creditCards.data,
+    debts.data,
     dismissals.data,
     goals.data,
     invoices.data,
@@ -171,6 +187,7 @@ export function useNotifications() {
       budgets.isLoading ||
       goals.isLoading ||
       categories.isLoading ||
+      debts.isLoading ||
       dismissals.isLoading,
     isError:
       recurringRules.isError ||
@@ -180,6 +197,7 @@ export function useNotifications() {
       budgets.isError ||
       goals.isError ||
       categories.isError ||
+      debts.isError ||
       dismissals.isError,
     refetch: async () => {
       await Promise.all([
@@ -190,6 +208,7 @@ export function useNotifications() {
         budgets.refetch(),
         goals.refetch(),
         categories.refetch(),
+        debts.refetch(),
         dismissals.refetch(),
       ]);
     },
