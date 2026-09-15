@@ -19,6 +19,7 @@ function invalidateCardFinancialData(
   queryClient.invalidateQueries({ queryKey: ["credit_card_invoices", userId] });
   queryClient.invalidateQueries({ queryKey: ["transactions", userId] });
   queryClient.invalidateQueries({ queryKey: ["account_balances", userId] });
+  queryClient.invalidateQueries({ queryKey: ["budget_summaries", userId] });
 }
 
 export function useCreditCards() {
