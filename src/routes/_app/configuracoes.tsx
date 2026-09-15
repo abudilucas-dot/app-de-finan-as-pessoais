@@ -181,6 +181,22 @@ function SettingsPage() {
       </section>
 
       <section className="surface p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <Download className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div>
+            <h2 className="font-semibold">Exportar dados</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Baixe uma cópia em CSV das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
+            </p>
+            <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
+              <Download aria-hidden="true" />
+              {exporting ? "Preparando arquivo..." : "Baixar dados em CSV"}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="surface p-5 sm:p-6">
         <h2 className="font-semibold">Sessão</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Encerre o acesso da sua conta neste dispositivo.
