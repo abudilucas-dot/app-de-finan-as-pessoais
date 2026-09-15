@@ -39,6 +39,8 @@ export type FinancialTransaction = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
+  deletion_reason: "user_deleted" | "replaced" | null;
 };
 
 export type TransactionInput = {
