@@ -53,6 +53,11 @@ export function TransactionFormDialog({
   onOpenChange: (open: boolean) => void;
   transaction?: FinancialTransaction | null;
   accounts: Account[];
+  initialValues?: {
+    type?: DirectTransactionType;
+    accountId?: string;
+    debitCardId?: string;
+  };
 }) {
   const createTransaction = useCreateTransaction();
   const updateTransaction = useUpdateTransaction();
@@ -81,20 +86,30 @@ export function TransactionFormDialog({
     const nextType =
       transaction?.type === "income" || transaction?.type === "transfer"
         ? transaction.type
-        : "expense";
+        : initialValues?.type ?? "expense";
     setType(nextType);
     setDescription(transaction?.description ?? "");
     setAmount(transaction ? moneyInputFromNumber(transaction.amount) : "0,00");
     setCategoryId(transaction?.category_id ?? "");
     setAccountId(
-      transaction?.account_id ?? accounts.find((account) => !account.is_archived)?.id ?? "",
+      transaction?.account_id ??
+        initialValues?.accountId ??
+        accounts.find((account) => !account.is_archived)?.id ??
+        "",
     );
     setDestinationAccountId(transaction?.destination_account_id ?? "");
-    setDebitCardId(transaction?.debit_card_id ?? "none");
+    setDebitCardId(transaction?.debit_card_id ?? initialValues?.debitCardId ?? "none");
     setDate(transaction?.transaction_date ?? localToday());
     setStatus(transaction?.status ?? "confirmed");
     setNotes(transaction?.notes ?? "");
-  }, [accounts, open, transaction]);
+  }, [
+    accounts,
+    initialValues?.accountId,
+    initialValues?.debitCardId,
+    initialValues?.type,
+    open,
+    transaction,
+  ]);
 
   const saving = createTransaction.isPending || updateTransaction.isPending;
 
