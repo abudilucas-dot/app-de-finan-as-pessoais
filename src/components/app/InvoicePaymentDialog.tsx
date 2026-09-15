@@ -53,10 +53,13 @@ export function InvoicePaymentDialog({
       setPaymentDate(localToday());
     }
   }, [activeAccounts, card?.default_payment_account_id, open]);
-  const submit = async (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     if (!invoice) return;
-    if (!accountId) return toast.error("Selecione a conta que fará o pagamento.");
+    if (!accountId) {
+      toast.error("Selecione a conta que fará o pagamento.");
+      return;
+    }
     try {
       await payInvoice.mutateAsync({ invoiceId: invoice.id, accountId, paymentDate });
       toast.success("Fatura paga. A despesa não foi contabilizada novamente.");
