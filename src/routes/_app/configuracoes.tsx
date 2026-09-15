@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, LogOut, UserRound } from "lucide-react";
+import { Download, Eye, LogOut, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +14,8 @@ import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
+import { downloadCsv, localFileDate } from "@/lib/csvExport";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
   head: () => ({ meta: [{ title: `Configurações — ${brand.name}` }] }),
@@ -29,6 +31,7 @@ function SettingsPage() {
   const updateSettings = useUpdateSettings();
   const [fullName, setFullName] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -57,6 +60,42 @@ function SettingsPage() {
       toast.success(checked ? "Valores ocultos." : "Valores visíveis.");
     } catch {
       toast.error("Não foi possível salvar essa preferência.");
+    }
+  };
+
+  const exportData = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences] = await Promise.all([
+        supabase.from("accounts").select("*").eq("user_id", user.id),
+        supabase.from("credit_cards").select("*").eq("user_id", user.id),
+        supabase.from("debit_cards").select("*").eq("user_id", user.id),
+        supabase.from("transactions").select("*").eq("user_id", user.id).order("transaction_date"),
+        supabase.from("budgets").select("*").eq("user_id", user.id),
+        supabase.from("financial_goals").select("*").eq("user_id", user.id),
+        supabase.from("goal_contributions").select("*").eq("user_id", user.id),
+        supabase.from("recurring_rules").select("*").eq("user_id", user.id),
+      ]);
+      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences];
+      const failed = result.find((item) => item.error);
+      if (failed?.error) throw failed.error;
+      const rows = [
+        ...(accounts.data ?? []).map((item) => ["Conta", item.id, item.name, item.institution, item.type, item.initial_balance, "", "", item.is_archived, ""]),
+        ...(creditCards.data ?? []).map((item) => ["Cartão de crédito", item.id, item.name, item.institution, item.brand, item.total_limit, item.closing_day, item.due_day, item.is_archived, ""]),
+        ...(debitCards.data ?? []).map((item) => ["Cartão de débito", item.id, item.name, item.institution, item.brand, "", item.account_id, "", item.is_archived, ""]),
+        ...(transactions.data ?? []).map((item) => ["Movimentação", item.id, item.description, item.type, item.status, item.amount, item.transaction_date, item.deleted_at ? "Na lixeira" : "Ativa", item.account_id ?? "", item.notes ?? ""]),
+        ...(budgets.data ?? []).map((item) => ["Orçamento", item.id, item.category_id, item.period_start, "", item.amount_limit, "", "", "", ""]),
+        ...(goals.data ?? []).map((item) => ["Meta", item.id, item.name, item.status, item.target_date ?? "", item.target_amount, "", "", "", ""]),
+        ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
+        ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
+      ];
+      downloadCsv(`financas-${localFileDate()}.csv`, ["Tipo de registro", "ID", "Descrição / nome", "Detalhe 1", "Detalhe 2", "Valor", "Data / referência", "Situação", "Vínculo", "Observações"], rows);
+      toast.success("Exportação concluída.");
+    } catch {
+      toast.error("Não foi possível exportar seus dados.");
+    } finally {
+      setExporting(false);
     }
   };
 
