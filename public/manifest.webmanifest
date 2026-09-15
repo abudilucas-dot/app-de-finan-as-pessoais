@@ -1,0 +1,19 @@
+{
+  "name": "Finanças",
+  "short_name": "Finanças",
+  "description": "Controle financeiro pessoal simples, rápido e seguro.",
+  "lang": "pt-BR",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B1120",
+  "theme_color": "#0F766E",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
