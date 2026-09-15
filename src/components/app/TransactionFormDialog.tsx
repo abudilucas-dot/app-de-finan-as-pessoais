@@ -48,6 +48,7 @@ export function TransactionFormDialog({
   onOpenChange,
   transaction,
   accounts,
+  initialValues,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,7 +87,7 @@ export function TransactionFormDialog({
     const nextType =
       transaction?.type === "income" || transaction?.type === "transfer"
         ? transaction.type
-        : initialValues?.type ?? "expense";
+        : (initialValues?.type ?? "expense");
     setType(nextType);
     setDescription(transaction?.description ?? "");
     setAmount(transaction ? moneyInputFromNumber(transaction.amount) : "0,00");
