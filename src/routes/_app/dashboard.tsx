@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeftRight, Plus, Wallet } from "lucide-react";
+import { ArrowLeftRight, BellRing, Plus, Wallet } from "lucide-react";
 import { useMemo } from "react";
 
 import { AccountCard } from "@/components/app/AccountCard";
@@ -18,6 +18,7 @@ import { useDebitCards } from "@/hooks/useDebitCards";
 import { useProfile } from "@/hooks/useProfile";
 import { useRecurringRules } from "@/hooks/useRecurringRules";
 import { useDebtSummaries } from "@/hooks/useDebts";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useTransactions } from "@/hooks/useTransactions";
 import { requestNewTransaction } from "@/lib/newTransaction";
 import { calculateMonthlySummary } from "@/lib/transactions";
@@ -47,6 +48,7 @@ function DashboardPage() {
   const invoices = useCreditCardInvoices();
   const recurringRules = useRecurringRules();
   const debts = useDebtSummaries();
+  const { notifications, isLoading: notificationsLoading } = useNotifications();
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -116,6 +118,7 @@ function DashboardPage() {
   const summary = calculateMonthlySummary(transactionList);
   const recentTransactions = transactionList.slice(0, 5);
   const firstName = profile?.full_name?.trim().split(/\s+/)[0];
+  const priorityNotifications = notifications.slice(0, 3);
 
   return (
     <div className="space-y-8">
@@ -214,6 +217,37 @@ function DashboardPage() {
           />
         )}
       </section>
+
+      {!notificationsLoading && priorityNotifications.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Avisos importantes</h2>
+              <p className="text-sm text-muted-foreground">Vencimentos e pendências que merecem atenção.</p>
+            </div>
+            <Link to="/notificacoes" className="shrink-0 text-sm font-medium text-primary hover:underline">
+              Ver todos
+            </Link>
+          </div>
+          <div className="surface divide-y">
+            {priorityNotifications.map((notification) => (
+              <Link
+                key={notification.key}
+                to={notification.to}
+                className="flex items-center gap-3 p-4 transition-colors hover:bg-muted/50 sm:px-6"
+              >
+                <span className={notification.priority === "critical" ? "flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive" : "flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400"}>
+                  <BellRing className="size-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{notification.title}</span>
+                  <span className="block truncate text-sm text-muted-foreground">{notification.description}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
