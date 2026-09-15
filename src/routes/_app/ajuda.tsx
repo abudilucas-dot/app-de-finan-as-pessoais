@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronRight, CircleHelp, Download, ReceiptText, Trash2, WalletCards } from "lucide-react";
+import { ChevronRight, CircleHelp, Download, Mail, MessageCircle, ReceiptText, Trash2, WalletCards } from "lucide-react";
 
 import { PageHeader } from "@/components/app/PageHeader";
 
@@ -52,7 +52,7 @@ function HelpPage() {
           <div>
             <h2 className="font-semibold">Comece por aqui</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Estas respostas cobrem os principais fluxos da versão beta. O canal direto de atendimento será incluído antes da abertura pública.
+              Estas respostas cobrem os principais fluxos do aplicativo. Se precisar, você também pode falar diretamente com o suporte.
             </p>
           </div>
         </div>
@@ -74,6 +74,31 @@ function HelpPage() {
             </Link>
           );
         })}
+      </section>
+
+      <section className="surface p-5 sm:p-6">
+        <h2 className="font-semibold">Ainda precisa de ajuda?</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Fale conosco pelo canal que preferir. Ao enviar uma mensagem, não compartilhe senha, códigos de confirmação ou dados de cartão.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <a
+            href="mailto:abudilucas@gmail.com?subject=Suporte%20-%20Finan%C3%A7as"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            Enviar e-mail
+          </a>
+          <a
+            href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20aplicativo%20Finan%C3%A7as."
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            Falar pelo WhatsApp
+          </a>
+        </div>
       </section>
     </div>
   );

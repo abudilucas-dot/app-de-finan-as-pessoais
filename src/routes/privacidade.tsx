@@ -55,7 +55,7 @@ function PrivacyPage() {
 
       <Section title="6. Atualizações e contato">
         <p>Esta política poderá ser atualizada quando o aplicativo mudar. A data da última atualização ficará no topo desta página.</p>
-        <p>Antes da abertura pública do serviço, será divulgado aqui um canal oficial para dúvidas e solicitações relacionadas à privacidade.</p>
+        <p>Para dúvidas ou solicitações relacionadas à privacidade, escreva para <a className="font-medium text-primary hover:underline" href="mailto:abudilucas@gmail.com?subject=Privacidade%20-%20Finan%C3%A7as">abudilucas@gmail.com</a> ou fale pelo <a className="font-medium text-primary hover:underline" href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20sobre%20privacidade%20no%20aplicativo%20Finan%C3%A7as." target="_blank" rel="noreferrer">WhatsApp</a>.</p>
       </Section>
     </LegalPage>
   );
