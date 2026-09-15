@@ -2,9 +2,10 @@ export type AppNotificationDestination =
   | "/calendario"
   | "/cartoes"
   | "/metas"
-  | "/orcamentos";
+  | "/orcamentos"
+  | "/dividas";
 
-export type AppNotificationKind = "scheduled" | "invoice" | "budget" | "goal";
+export type AppNotificationKind = "scheduled" | "invoice" | "budget" | "goal" | "debt";
 export type AppNotificationPriority = "warning" | "critical" | "success";
 
 export type AppNotification = {
