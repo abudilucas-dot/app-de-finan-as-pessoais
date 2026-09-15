@@ -10,6 +10,13 @@ export const reportPeriodLabels: Record<ReportPeriod, string> = {
   all: "Todo o período",
 };
 
+export type ReportSummary = { income: number; expense: number };
+
+export type ReportComparison = {
+  previous: ReportSummary;
+  label: string;
+} | null;
+
 export function localDateString(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -21,6 +28,12 @@ function monthStart(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
+function monthEnd(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(),
+  ).padStart(2, "0")}`;
+}
+
 export function reportStartDate(period: ReportPeriod, now = new Date()) {
   if (period === "all") return null;
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -28,6 +41,30 @@ export function reportStartDate(period: ReportPeriod, now = new Date()) {
   if (period === "six_months") start.setMonth(start.getMonth() - 5);
   if (period === "year") start.setMonth(0);
   return monthStart(start);
+}
+
+function previousReportRange(period: ReportPeriod, now = new Date()) {
+  if (period === "all") return null;
+
+  if (period === "year") {
+    const previousYear = now.getFullYear() - 1;
+    return { start: `${previousYear}-01-01`, end: `${previousYear}-12-31`, label: "ano anterior" };
+  }
+
+  const months = period === "month" ? 1 : period === "three_months" ? 3 : 6;
+  const currentStart = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const previousStart = new Date(currentStart.getFullYear(), currentStart.getMonth() - months, 1);
+  const previousEnd = new Date(currentStart.getFullYear(), currentStart.getMonth(), 0);
+
+  return {
+    start: monthStart(previousStart),
+    end: monthEnd(previousEnd),
+    label: months === 1 ? "mês anterior" : "período anterior",
+  };
+}
+
+function belongsToAccount(transaction: FinancialTransaction, accountId: string) {
+  return accountId === "all" || transaction.account_id === accountId;
 }
 
 export function filterReportTransactions(
@@ -42,12 +79,11 @@ export function filterReportTransactions(
     if (transaction.status !== "confirmed") return false;
     if (transaction.transaction_date > today) return false;
     if (start && transaction.transaction_date < start) return false;
-    if (accountId !== "all" && transaction.account_id !== accountId) return false;
-    return true;
+    return belongsToAccount(transaction, accountId);
   });
 }
 
-export function reportSummary(transactions: FinancialTransaction[]) {
+export function reportSummary(transactions: FinancialTransaction[]): ReportSummary {
   return transactions.reduce(
     (summary, transaction) => {
       if (transaction.type === "income") summary.income += Number(transaction.amount);
@@ -56,6 +92,34 @@ export function reportSummary(transactions: FinancialTransaction[]) {
     },
     { income: 0, expense: 0 },
   );
+}
+
+export function previousReportComparison(
+  transactions: FinancialTransaction[],
+  period: ReportPeriod,
+  accountId: string,
+  now = new Date(),
+): ReportComparison {
+  const range = previousReportRange(period, now);
+  if (!range) return null;
+
+  return {
+    label: range.label,
+    previous: reportSummary(
+      transactions.filter(
+        (transaction) =>
+          transaction.status === "confirmed" &&
+          transaction.transaction_date >= range.start &&
+          transaction.transaction_date <= range.end &&
+          belongsToAccount(transaction, accountId),
+      ),
+    ),
+  };
+}
+
+export function percentageChange(current: number, previous: number) {
+  if (previous === 0) return null;
+  return ((current - previous) / Math.abs(previous)) * 100;
 }
 
 export function monthlyReportData(transactions: FinancialTransaction[], period: ReportPeriod) {
@@ -117,8 +181,9 @@ export function expenseCategoryData(
     totals.set(category, (totals.get(category) ?? 0) + Number(transaction.amount));
   }
 
+  const total = [...totals.values()].reduce((sum, value) => sum + value, 0);
   return [...totals.entries()]
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value]) => ({ name, value, percentage: total > 0 ? (value / total) * 100 : 0 }))
     .sort((left, right) => right.value - left.value)
     .slice(0, 6);
 }
