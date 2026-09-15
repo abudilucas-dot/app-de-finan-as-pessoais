@@ -59,6 +59,7 @@ export function useCreateAccount() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["account_balances", user?.id] });
     },
   });
 }
