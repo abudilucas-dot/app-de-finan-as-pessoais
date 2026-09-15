@@ -3,6 +3,7 @@ import { Download, Eye, LogOut, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { DeleteAccountSection } from "@/components/app/DeleteAccountSection";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { LoadingState } from "@/components/app/states";
@@ -242,6 +243,8 @@ function SettingsPage() {
           </div>
         </div>
       </section>
+
+      <DeleteAccountSection />
 
       <section className="surface p-5 sm:p-6">
         <h2 className="font-semibold">Sessão</h2>
