@@ -16,7 +16,6 @@ import { CreditCardFormDialog } from "@/components/app/CreditCardFormDialog";
 import { DebitCardFormDialog } from "@/components/app/DebitCardFormDialog";
 import { InvoicePaymentDialog } from "@/components/app/InvoicePaymentDialog";
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
-import { TransactionFormDialog } from "@/components/app/TransactionFormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
 import {
@@ -87,9 +86,7 @@ function CreditCardsPage() {
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [editing, setEditing] = useState<CreditCard | null>(null);
   const [debitFormOpen, setDebitFormOpen] = useState(false);
-  const [debitExpenseOpen, setDebitExpenseOpen] = useState(false);
   const [editingDebit, setEditingDebit] = useState<DebitCard | null>(null);
-  const [expenseDebitCard, setExpenseDebitCard] = useState<DebitCard | null>(null);
   const [expenseCard, setExpenseCard] = useState<CreditCard | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CreditCard | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<{
@@ -196,7 +193,7 @@ function CreditCardsPage() {
               disabled={activeCards.length === 0}
             >
               <ShoppingBag aria-hidden="true" />
-              Nova compra no crédito
+              Nova compra
             </Button>
             <Button
               onClick={() => {
@@ -293,7 +290,7 @@ function CreditCardsPage() {
                         }}
                       >
                         <ShoppingBag aria-hidden="true" />
-                        Compra no crédito
+                        Compra
                       </Button>
                       <Button
                         variant="ghost"
@@ -366,19 +363,7 @@ function CreditCardsPage() {
                       {account?.name ?? "Conta indisponível"}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2 p-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={!account || account.is_archived}
-                      onClick={() => {
-                        setExpenseDebitCard(card);
-                        setDebitExpenseOpen(true);
-                      }}
-                    >
-                      <ShoppingBag aria-hidden="true" />
-                      Registrar compra
-                    </Button>
+                  <div className="flex gap-2 p-4">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -517,19 +502,6 @@ function CreditCardsPage() {
         onOpenChange={setDebitFormOpen}
         card={editingDebit}
         accounts={accounts.data ?? []}
-      />
-      <TransactionFormDialog
-        open={debitExpenseOpen}
-        onOpenChange={(open) => {
-          setDebitExpenseOpen(open);
-          if (!open) setExpenseDebitCard(null);
-        }}
-        accounts={accounts.data ?? []}
-        initialValues={{
-          type: "expense",
-          accountId: expenseDebitCard?.account_id,
-          debitCardId: expenseDebitCard?.id,
-        }}
       />
       <CardExpenseDialog
         open={expenseOpen}
