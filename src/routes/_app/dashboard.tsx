@@ -3,6 +3,7 @@ import { ArrowLeftRight, Plus, Wallet } from "lucide-react";
 import { useMemo } from "react";
 
 import { AccountCard } from "@/components/app/AccountCard";
+import { BalanceProjection } from "@/components/app/BalanceProjection";
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { PageHeader } from "@/components/app/PageHeader";
 import { TransactionItem } from "@/components/app/TransactionItem";
@@ -12,9 +13,11 @@ import { brand } from "@/config/brand";
 import { toBalanceMap, useAccountBalances } from "@/hooks/useAccountBalances";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
-import { useCreditCards } from "@/hooks/useCreditCards";
+import { useCreditCardInvoices, useCreditCards } from "@/hooks/useCreditCards";
 import { useDebitCards } from "@/hooks/useDebitCards";
 import { useProfile } from "@/hooks/useProfile";
+import { useRecurringRules } from "@/hooks/useRecurringRules";
+import { useDebtSummaries } from "@/hooks/useDebts";
 import { useTransactions } from "@/hooks/useTransactions";
 import { requestNewTransaction } from "@/lib/newTransaction";
 import { calculateMonthlySummary } from "@/lib/transactions";
@@ -41,6 +44,9 @@ function DashboardPage() {
   const categories = useCategories();
   const cards = useCreditCards();
   const debitCards = useDebitCards();
+  const invoices = useCreditCardInvoices();
+  const recurringRules = useRecurringRules();
+  const debts = useDebtSummaries();
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -65,7 +71,10 @@ function DashboardPage() {
     transactions.isLoading ||
     categories.isLoading ||
     cards.isLoading ||
-    debitCards.isLoading
+    debitCards.isLoading ||
+    invoices.isLoading ||
+    recurringRules.isLoading ||
+    debts.isLoading
   ) {
     return <LoadingState label="Carregando seu resumo..." />;
   }
@@ -75,7 +84,10 @@ function DashboardPage() {
     transactions.isError ||
     categories.isError ||
     cards.isError ||
-    debitCards.isError
+    debitCards.isError ||
+    invoices.isError ||
+    recurringRules.isError ||
+    debts.isError
   ) {
     return (
       <ErrorState
@@ -86,6 +98,9 @@ function DashboardPage() {
           categories.refetch();
           cards.refetch();
           debitCards.refetch();
+          invoices.refetch();
+          recurringRules.refetch();
+          debts.refetch();
         }}
       />
     );
@@ -157,6 +172,14 @@ function DashboardPage() {
           </p>
         </article>
       </section>
+
+      <BalanceProjection
+        currentBalance={totalBalance}
+        transactions={transactionList}
+        recurringRules={recurringRules.data ?? []}
+        invoices={invoices.data ?? []}
+        debts={debts.data ?? []}
+      />
 
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
