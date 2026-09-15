@@ -22,6 +22,7 @@ import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoe
 import { Route as AppContasRouteImport } from './routes/_app/contas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppMaisRouteImport } from './routes/_app/mais'
+import { Route as AppLixeiraRouteImport } from './routes/_app/lixeira'
 import { Route as AppMetasRouteImport } from './routes/_app/metas'
 import { Route as AppNotificacoesRouteImport } from './routes/_app/notificacoes'
 import { Route as AppOrcamentosRouteImport } from './routes/_app/orcamentos'
@@ -92,6 +93,11 @@ const AppMaisRoute = AppMaisRouteImport.update({
   path: '/mais',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLixeiraRoute = AppLixeiraRouteImport.update({
+  id: '/lixeira',
+  path: '/lixeira',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMetasRoute = AppMetasRouteImport.update({
   id: '/metas',
   path: '/metas',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/contas': typeof AppContasRoute
   '/dashboard': typeof AppDashboardRoute
   '/mais': typeof AppMaisRoute
+  '/lixeira': typeof AppLixeiraRoute
   '/metas': typeof AppMetasRoute
   '/notificacoes': typeof AppNotificacoesRoute
   '/orcamentos': typeof AppOrcamentosRoute
@@ -170,6 +177,7 @@ export interface FileRoutesById {
   '/_app/contas': typeof AppContasRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/mais': typeof AppMaisRoute
+  '/_app/lixeira': typeof AppLixeiraRoute
   '/_app/metas': typeof AppMetasRoute
   '/_app/notificacoes': typeof AppNotificacoesRoute
   '/_app/orcamentos': typeof AppOrcamentosRoute
@@ -191,6 +199,7 @@ export interface FileRouteTypes {
     | '/contas'
     | '/dashboard'
     | '/mais'
+    | '/lixeira'
     | '/metas'
     | '/notificacoes'
     | '/orcamentos'
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/contas'
     | '/dashboard'
     | '/mais'
+    | '/lixeira'
     | '/metas'
     | '/notificacoes'
     | '/orcamentos'
@@ -339,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMaisRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/lixeira': {
+      id: '/_app/lixeira'
+      path: '/lixeira'
+      fullPath: '/lixeira'
+      preLoaderRoute: typeof AppLixeiraRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/metas': {
       id: '/_app/metas'
       path: '/metas'
@@ -384,6 +401,7 @@ interface AppRouteChildren {
   AppContasRoute: typeof AppContasRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppMaisRoute: typeof AppMaisRoute
+  AppLixeiraRoute: typeof AppLixeiraRoute
   AppMetasRoute: typeof AppMetasRoute
   AppNotificacoesRoute: typeof AppNotificacoesRoute
   AppOrcamentosRoute: typeof AppOrcamentosRoute
@@ -398,6 +416,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppContasRoute: AppContasRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppMaisRoute: AppMaisRoute,
+  AppLixeiraRoute: AppLixeiraRoute,
   AppMetasRoute: AppMetasRoute,
   AppNotificacoesRoute: AppNotificacoesRoute,
   AppOrcamentosRoute: AppOrcamentosRoute,
