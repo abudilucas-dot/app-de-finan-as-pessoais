@@ -70,7 +70,7 @@ function SettingsPage() {
     if (!user) return;
     setExporting(true);
     try {
-      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences] = await Promise.all([
+      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments] = await Promise.all([
         supabase.from("accounts").select("*").eq("user_id", user.id),
         supabase.from("credit_cards").select("*").eq("user_id", user.id),
         supabase.from("debit_cards").select("*").eq("user_id", user.id),
@@ -79,8 +79,10 @@ function SettingsPage() {
         supabase.from("financial_goals").select("*").eq("user_id", user.id),
         supabase.from("goal_contributions").select("*").eq("user_id", user.id),
         supabase.from("recurring_rules").select("*").eq("user_id", user.id),
+        supabase.from("financial_debts").select("*").eq("user_id", user.id),
+        supabase.from("debt_payments").select("*").eq("user_id", user.id),
       ]);
-      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences];
+      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments];
       const failed = result.find((item) => item.error);
       if (failed?.error) throw failed.error;
       const rows = [
@@ -92,6 +94,8 @@ function SettingsPage() {
         ...(goals.data ?? []).map((item) => ["Meta", item.id, item.name, item.status, item.target_date ?? "", item.target_amount, "", "", "", ""]),
         ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
         ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
+        ...(debts.data ?? []).map((item) => ["Dívida", item.id, item.name, item.institution ?? "", item.status, item.remaining_amount, item.next_due_date ?? "", item.total_installments ? `${item.total_installments} parcelas` : "", item.interest_rate ?? "", item.notes ?? ""]),
+        ...(debtPayments.data ?? []).map((item) => ["Pagamento de dívida", item.id, item.debt_id, item.payment_date, "", item.amount, item.account_id, "", item.transaction_id, item.notes ?? ""]),
       ];
       const filename = `financas-${localFileDate()}.html`;
       setPreparedBackup(
@@ -214,7 +218,7 @@ function SettingsPage() {
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
+              Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, dívidas, orçamentos e recorrências.
             </p>
             {preparedBackup ? (
               <div className="mt-4 space-y-3">
