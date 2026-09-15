@@ -10,6 +10,7 @@ import { brand } from "@/config/brand";
 import { primaryNav } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useNotifications } from "@/hooks/useNotifications";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
 import { requestNewTransaction } from "@/lib/newTransaction";
 import { cn } from "@/lib/utils";
@@ -24,12 +25,19 @@ export function AppHeader() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const { data: settings } = useSettings();
+  const { notifications, isLoading: notificationsLoading } = useNotifications();
   const updateSettings = useUpdateSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   const hidden = settings?.hide_values ?? false;
   const displayName = profile?.full_name?.trim() || user?.email?.split("@")[0] || "Você";
+  const notificationCount = notifications.length;
+  const notificationLabel = notificationsLoading
+    ? "Carregando notificações"
+    : notificationCount > 0
+      ? `${notificationCount} ${notificationCount === 1 ? "notificação pendente" : "notificações pendentes"}`
+      : "Notificações";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur sm:px-6">
@@ -106,8 +114,21 @@ export function AppHeader() {
           )}
         </Button>
 
-        <Button variant="ghost" size="icon" aria-label="Notificações" disabled>
-          <Bell className="h-5 w-5" aria-hidden="true" />
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={notificationLabel}
+        >
+          <Link to="/notificacoes">
+            <Bell className="h-5 w-5" aria-hidden="true" />
+            {notificationCount > 0 ? (
+              <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
+                {notificationCount > 9 ? "9+" : notificationCount}
+              </span>
+            ) : null}
+          </Link>
         </Button>
 
         <Link
