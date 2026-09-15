@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useDeleteGoal, useGoalSummaries } from "@/hooks/useGoals";
-import type { GoalSummary } from "@/lib/goals";
+import type { GoalContribution, GoalSummary } from "@/lib/goals";
 
 export const Route = createFileRoute("/_app/metas")({
   head: () => ({ meta: [{ title: `Metas — ${brand.name}` }] }),
@@ -27,6 +27,7 @@ function GoalsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalSummary | null>(null);
   const [contributionGoal, setContributionGoal] = useState<GoalSummary | null>(null);
+  const [editingContribution, setEditingContribution] = useState<GoalContribution | null>(null);
 
   const accountNames = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),
@@ -65,7 +66,7 @@ function GoalsPage() {
             <article className="surface p-5"><p className="text-sm text-muted-foreground">Já reservado</p><MoneyDisplay value={totalSaved} className="mt-2 block text-2xl font-semibold text-positive" /></article>
           </section>
           <section className="grid gap-4 xl:grid-cols-2">
-            {items.map((goal) => <GoalCard key={goal.id} goal={goal} accountNames={accountNames} onEdit={(selected) => { setEditingGoal(selected); setFormOpen(true); }} onAddContribution={setContributionGoal} onDelete={removeGoal} />)}
+            {items.map((goal) => <GoalCard key={goal.id} goal={goal} accountNames={accountNames} onEdit={(selected) => { setEditingGoal(selected); setFormOpen(true); }} onAddContribution={(goal) => { setEditingContribution(null); setContributionGoal(goal); }} onDelete={removeGoal} onEditContribution={(goal, contribution) => { setEditingContribution(contribution); setContributionGoal(goal); }} />)}
           </section>
         </>
       ) : (
@@ -73,7 +74,7 @@ function GoalsPage() {
       )}
 
       <GoalFormDialog open={formOpen} onOpenChange={setFormOpen} goal={editingGoal} />
-      <GoalContributionDialog open={Boolean(contributionGoal)} onOpenChange={(open) => { if (!open) setContributionGoal(null); }} goal={contributionGoal} accounts={accounts.data ?? []} />
+      <GoalContributionDialog open={Boolean(contributionGoal)} onOpenChange={(open) => { if (!open) { setContributionGoal(null); setEditingContribution(null); } }} goal={contributionGoal} contribution={editingContribution} accounts={accounts.data ?? []} />
     </div>
   );
 }
