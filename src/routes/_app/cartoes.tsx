@@ -511,9 +511,11 @@ function CreditCardsPage() {
       />
       <InvoicePaymentDialog
         open={Boolean(paymentTarget)}
-        onOpenChange={(open) => !open && setPaymentTarget(null)}
-        invoice={paymentTarget?.invoice}
-        card={paymentTarget?.card}
+        onOpenChange={(open) => {
+          if (!open) setPaymentTarget(null);
+        }}
+        invoice={paymentTarget?.invoice ?? null}
+        card={paymentTarget?.card ?? null}
         amount={paymentTarget?.amount ?? 0}
         accounts={accounts.data ?? []}
       />
