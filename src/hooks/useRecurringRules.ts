@@ -9,6 +9,7 @@ function invalidateFinancialData(queryClient: ReturnType<typeof useQueryClient>,
   queryClient.invalidateQueries({ queryKey: ["transactions", userId] });
   queryClient.invalidateQueries({ queryKey: ["account_balances", userId] });
   queryClient.invalidateQueries({ queryKey: ["budget_summaries", userId] });
+  queryClient.invalidateQueries({ queryKey: ["subscriptions", userId] });
 }
 
 export function useRecurringRules() {
@@ -26,6 +27,46 @@ export function useRecurringRules() {
       if (error) throw error;
       return (data ?? []) as RecurringRule[];
     },
+  });
+}
+
+export function useSubscriptions() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["subscriptions", user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async (): Promise<RecurringRule[]> => {
+      const { data, error } = await supabase
+        .from("recurring_rules")
+        .select("*")
+        .eq("is_subscription", true)
+        .order("active", { ascending: false })
+        .order("next_occurrence", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as RecurringRule[];
+    },
+  });
+}
+
+export function useSetRecurringRuleActive() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      if (!user) throw new Error("Sessão não encontrada");
+      const { data, error } = await supabase
+        .from("recurring_rules")
+        .update({ active })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as RecurringRule;
+    },
+    onSuccess: () => invalidateFinancialData(queryClient, user?.id),
   });
 }
 
