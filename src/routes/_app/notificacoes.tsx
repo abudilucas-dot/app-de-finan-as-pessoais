@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CheckCircle2,
   CreditCard,
+  Landmark,
   Loader2,
   Target,
   Trash2,
@@ -26,6 +27,7 @@ const notificationIcon = {
   invoice: CreditCard,
   budget: WalletCards,
   goal: Target,
+  debt: Landmark,
 } as const;
 
 function NotificationsPage() {
@@ -64,7 +66,7 @@ function NotificationsPage() {
         <EmptyState
           icon={BellRing}
           title="Tudo em dia por aqui"
-          description="Quando houver uma fatura próxima, lançamento pendente, orçamento no limite ou meta concluída, o aviso aparecerá aqui."
+          description="Quando houver uma fatura ou dívida próxima, lançamento pendente, orçamento no limite ou meta concluída, o aviso aparecerá aqui."
         />
       ) : null}
 
