@@ -11,6 +11,8 @@ import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
     meta: [
@@ -32,10 +34,22 @@ function SignUpPage() {
   const [submitting, setSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
+  const [resendWaitSeconds, setResendWaitSeconds] = useState(0);
+  const [signupInProgress, setSignupInProgress] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/onboarding", replace: true });
-  }, [user, loading, navigate]);
+    if (resendWaitSeconds <= 0) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setResendWaitSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [resendWaitSeconds]);
+
+  useEffect(() => {
+    if (!signupInProgress && !loading && user) navigate({ to: "/dashboard", replace: true });
+  }, [user, loading, navigate, signupInProgress]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -45,6 +59,8 @@ function SignUpPage() {
     }
 
     setSubmitting(true);
+    setSignupInProgress(true);
+
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -53,32 +69,45 @@ function SignUpPage() {
         data: { full_name: fullName.trim() },
       },
     });
-    setSubmitting(false);
 
     if (error) {
+      setSubmitting(false);
+      setSignupInProgress(false);
+
       const message = error.message.toLowerCase();
       toast.error(
-        message.includes("registered")
-          ? "Este e-mail já possui uma conta. Use a tela de login."
-          : message.includes("redirect")
-            ? "Abra o endereço oficial do aplicativo e tente novamente."
-            : message.includes("rate limit")
-              ? "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente."
-              : "Não foi possível criar sua conta. Tente novamente.",
+        message.includes("redirect")
+          ? "Abra o endereço oficial do aplicativo e tente novamente."
+          : message.includes("rate limit") || message.includes("email rate limit")
+            ? "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente."
+            : "Não foi possível criar sua conta. Tente novamente.",
       );
       return;
     }
 
-    if (!data.session) {
-      setEmailSent(true);
-      return;
+    // Se a confirmação de e-mail estiver ativada, data.session será nula. Caso
+    // contrário, encerramos qualquer sessão local para nunca levar alguém direto
+    // ao dashboard após um cadastro.
+    if (data.session) {
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+
+      if (signOutError) {
+        setSubmitting(false);
+        setSignupInProgress(false);
+        toast.error("Não foi possível concluir o cadastro com segurança. Tente novamente.");
+        return;
+      }
     }
 
-    toast.success("Conta criada!");
-    navigate({ to: "/onboarding", replace: true });
+    setSubmitting(false);
+    setSignupInProgress(false);
+    setEmailSent(true);
+    setResendWaitSeconds(RESEND_COOLDOWN_SECONDS);
   };
 
   const handleResendConfirmation = async () => {
+    if (resendWaitSeconds > 0) return;
+
     setResendingConfirmation(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -88,10 +117,16 @@ function SignUpPage() {
     setResendingConfirmation(false);
 
     if (error) {
-      toast.error("Não foi possível reenviar agora. Tente novamente em alguns minutos.");
+      const message = error.message.toLowerCase();
+      toast.error(
+        message.includes("rate limit") || message.includes("email rate limit")
+          ? "O reenvio está temporariamente limitado. Aguarde alguns minutos."
+          : "Não foi possível reenviar agora. Tente novamente em alguns minutos.",
+      );
       return;
     }
 
+    setResendWaitSeconds(RESEND_COOLDOWN_SECONDS);
     toast.success("Se sua conta ainda precisar de confirmação, enviamos um novo link.");
   };
 
@@ -99,7 +134,7 @@ function SignUpPage() {
     return (
       <AuthShell
         title="Confirme seu e-mail"
-        description={`Se este e-mail ainda precisar de confirmação, enviamos um link para ${email}. Depois da confirmação, você será direcionado para o login.`}
+        description={`Enviamos um link para ${email}. Depois da confirmação, você será direcionado para o login.`}
         footer={
           <Link to="/login" className="font-medium text-primary hover:underline">
             Ir para o login
@@ -108,11 +143,20 @@ function SignUpPage() {
       >
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Já confirmou este e-mail? Entre com sua senha. Se esqueceu a senha, use a recuperação de acesso.
+            Não encontrou a mensagem? Confira Spam e Promoções. O reenvio fica disponível após um minuto para evitar bloqueios.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button type="button" variant="outline" onClick={handleResendConfirmation} disabled={resendingConfirmation}>
-              {resendingConfirmation ? "Reenviando..." : "Reenviar confirmação"}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResendConfirmation}
+              disabled={resendingConfirmation || resendWaitSeconds > 0}
+            >
+              {resendingConfirmation
+                ? "Reenviando..."
+                : resendWaitSeconds > 0
+                  ? `Reenviar em ${resendWaitSeconds}s`
+                  : "Reenviar confirmação"}
             </Button>
             <Button type="button" variant="ghost" asChild>
               <Link to="/recuperar-senha">Esqueci minha senha</Link>
