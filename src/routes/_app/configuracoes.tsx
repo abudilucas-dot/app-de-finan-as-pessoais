@@ -92,7 +92,7 @@ function SettingsPage() {
         ...(contributions.data ?? []).map((item) => ["Aporte de meta", item.id, item.goal_id, item.contribution_date, "", item.amount, item.account_id ?? "", "", "", item.notes ?? ""]),
         ...(recurrences.data ?? []).map((item) => ["Recorrência", item.id, item.description, item.type, item.frequency, item.amount, item.next_occurrence, item.active ? "Ativa" : "Inativa", item.account_id, item.notes ?? ""]),
       ];
-      const filename = `financas-${localFileDate()}.csv`;
+      const filename = `financas-${localFileDate()}.html`;
       setPreparedBackup(
         createCsvFile(filename, ["Tipo de registro", "ID", "Descrição / nome", "Detalhe 1", "Detalhe 2", "Valor", "Data / referência", "Situação", "Vínculo", "Observações"], rows),
       );
@@ -213,12 +213,12 @@ function SettingsPage() {
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe uma cópia em CSV das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
+              Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, orçamentos e recorrências.
             </p>
             {preparedBackup ? (
               <div className="mt-4 space-y-3">
                 <p className="text-sm font-medium text-foreground">
-                  Backup pronto: {preparedBackup.name}
+                  Relatório pronto: {preparedBackup.name}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
@@ -236,7 +236,7 @@ function SettingsPage() {
             ) : (
               <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
                 <Download aria-hidden="true" />
-                {exporting ? "Preparando arquivo..." : "Preparar backup em CSV"}
+                {exporting ? "Preparando arquivo..." : "Preparar relatório financeiro"}
               </Button>
             )}
           </div>
