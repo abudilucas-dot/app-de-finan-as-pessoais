@@ -23,6 +23,7 @@ import { Route as AppContasRouteImport } from './routes/_app/contas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppMaisRouteImport } from './routes/_app/mais'
 import { Route as AppMetasRouteImport } from './routes/_app/metas'
+import { Route as AppNotificacoesRouteImport } from './routes/_app/notificacoes'
 import { Route as AppOrcamentosRouteImport } from './routes/_app/orcamentos'
 import { Route as AppRelatoriosRouteImport } from './routes/_app/relatorios'
 import { Route as AppTransacoesRouteImport } from './routes/_app/transacoes'
@@ -96,6 +97,11 @@ const AppMetasRoute = AppMetasRouteImport.update({
   path: '/metas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNotificacoesRoute = AppNotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrcamentosRoute = AppOrcamentosRouteImport.update({
   id: '/orcamentos',
   path: '/orcamentos',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/mais': typeof AppMaisRoute
   '/metas': typeof AppMetasRoute
+  '/notificacoes': typeof AppNotificacoesRoute
   '/orcamentos': typeof AppOrcamentosRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/transacoes': typeof AppTransacoesRoute
@@ -164,6 +171,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/mais': typeof AppMaisRoute
   '/_app/metas': typeof AppMetasRoute
+  '/_app/notificacoes': typeof AppNotificacoesRoute
   '/_app/orcamentos': typeof AppOrcamentosRoute
   '/_app/relatorios': typeof AppRelatoriosRoute
   '/_app/transacoes': typeof AppTransacoesRoute
@@ -184,6 +192,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/mais'
     | '/metas'
+    | '/notificacoes'
     | '/orcamentos'
     | '/relatorios'
     | '/transacoes'
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/mais'
     | '/metas'
+    | '/notificacoes'
     | '/orcamentos'
     | '/relatorios'
     | '/transacoes'
@@ -336,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMetasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/notificacoes': {
+      id: '/_app/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AppNotificacoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orcamentos': {
       id: '/_app/orcamentos'
       path: '/orcamentos'
@@ -368,6 +385,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppMaisRoute: typeof AppMaisRoute
   AppMetasRoute: typeof AppMetasRoute
+  AppNotificacoesRoute: typeof AppNotificacoesRoute
   AppOrcamentosRoute: typeof AppOrcamentosRoute
   AppRelatoriosRoute: typeof AppRelatoriosRoute
   AppTransacoesRoute: typeof AppTransacoesRoute
@@ -381,6 +399,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppMaisRoute: AppMaisRoute,
   AppMetasRoute: AppMetasRoute,
+  AppNotificacoesRoute: AppNotificacoesRoute,
   AppOrcamentosRoute: AppOrcamentosRoute,
   AppRelatoriosRoute: AppRelatoriosRoute,
   AppTransacoesRoute: AppTransacoesRoute,
