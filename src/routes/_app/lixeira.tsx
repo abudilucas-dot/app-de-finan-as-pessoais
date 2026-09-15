@@ -33,7 +33,17 @@ type TrashItem = {
   subtitle: string;
   amount: number;
   icon: typeof TrendingUp;
+  deletedAt: string | null;
 };
+
+function retentionLabel(deletedAt: string | null) {
+  if (!deletedAt) return "Disponível para restaurar por até 30 dias.";
+  const remainingHours = Math.max(0, Math.ceil((new Date(deletedAt).getTime() + 30 * 24 * 60 * 60 * 1000 - Date.now()) / (60 * 60 * 1000)));
+  if (remainingHours <= 1) return "Expira em menos de 1 hora.";
+  if (remainingHours <= 24) return `Expira em ${remainingHours} horas.`;
+  const remainingDays = Math.ceil(remainingHours / 24);
+  return `Restam ${remainingDays} ${remainingDays === 1 ? "dia" : "dias"} para restaurar.`;
+}
 
 function TrashPage() {
   const transactions = useTrashedTransactions();
@@ -68,6 +78,10 @@ function TrashPage() {
       const debitCard = first.debit_card_id ? debitCardById.get(first.debit_card_id) : undefined;
       const installments = groupedTransactions.length > 1 ? ` · ${groupedTransactions.length} parcelas` : "";
       const source = card ?? debitCard ?? category ?? TRANSACTION_TYPE_LABELS[first.type];
+      const deletedAt = groupedTransactions
+        .map((item) => item.deleted_at)
+        .filter((date): date is string => Boolean(date))
+        .sort()[0] ?? null;
 
       result.push({
         id: first.id,
@@ -75,6 +89,7 @@ function TrashPage() {
         title: first.description.replace(/ \(1\/\d+\)$/, ""),
         subtitle: `${source} · ${formatTransactionDate(first.transaction_date)}${installments}`,
         amount: totalAmount,
+        deletedAt,
         icon:
           first.type === "income"
             ? TrendingUp
@@ -104,7 +119,7 @@ function TrashPage() {
     <div className="space-y-6">
       <PageHeader
         title="Lixeira"
-        description="As movimentações aqui não afetam saldos, faturas, orçamentos ou relatórios."
+        description="As movimentações ficam disponíveis para restauração por até 30 dias antes da exclusão definitiva."
       />
 
       {transactions.isLoading || categories.isLoading || cards.isLoading || debitCards.isLoading ? (
@@ -123,7 +138,7 @@ function TrashPage() {
         <EmptyState
           icon={Trash2}
           title="Sua lixeira está vazia"
-          description="Quando você excluir uma movimentação, ela aparecerá aqui para poder ser restaurada."
+          description="Quando você excluir uma movimentação, ela poderá ser restaurada por até 30 dias."
         />
       ) : null}
 
@@ -141,6 +156,7 @@ function TrashPage() {
                   <div className="min-w-0">
                     <h2 className="truncate font-semibold">{item.title}</h2>
                     <p className="truncate text-sm text-muted-foreground">{item.subtitle}</p>
+                    <p className="mt-1 text-xs text-warning">{retentionLabel(item.deletedAt)}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
