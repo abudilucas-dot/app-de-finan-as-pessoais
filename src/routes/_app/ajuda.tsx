@@ -4,7 +4,7 @@ import { ChevronRight, CircleHelp, Download, Mail, MessageCircle, ReceiptText, T
 import { PageHeader } from "@/components/app/PageHeader";
 
 export const Route = createFileRoute("/_app/ajuda")({
-  head: () => ({ meta: [{ title: "Ajuda — Finanças" }] }),
+  head: () => ({ meta: [{ title: "Ajuda — Valune" }] }),
   component: HelpPage,
 });
 
@@ -83,14 +83,14 @@ function HelpPage() {
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <a
-            href="mailto:abudilucas@gmail.com?subject=Suporte%20-%20Finan%C3%A7as"
+            href="mailto:abudilucas@gmail.com?subject=Suporte%20-%20Valune"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
             Enviar e-mail
           </a>
           <a
-            href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20aplicativo%20Finan%C3%A7as."
+            href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20o%20aplicativo%20Valune."
             target="_blank"
             rel="noreferrer"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"

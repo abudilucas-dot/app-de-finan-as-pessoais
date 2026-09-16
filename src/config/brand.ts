@@ -3,10 +3,10 @@
  * Altere aqui e o nome muda em todo o produto.
  */
 export const brand = {
-  name: "Finanças",
-  shortName: "Finanças",
+  name: "Valune",
+  shortName: "Valune",
   tagline: "Suas finanças, organizadas com clareza.",
   description:
     "Organize suas contas e acompanhe sua vida financeira em um painel simples, rápido e seguro.",
-  initials: "F",
+  initials: "V",
 } as const;
