@@ -1,4 +1,4 @@
-const CACHE_NAME = "financas-offline-v1";
+const CACHE_NAME = "valune-offline-v1";
 const OFFLINE_ASSETS = ["/offline.html", "/app-icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

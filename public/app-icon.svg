@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Valune">
   <rect width="512" height="512" rx="112" fill="#0F766E"/>
-  <path fill="#F8FAFC" d="M152 128h220v62H224v66h128v60H224v96h-72z"/>
-  <path fill="#5EEAD4" d="M321 296h61v88h-61z"/>
-  <path fill="#99F6E4" d="M240 344h61v40h-61z"/>
-  <path fill="#CCFBF1" d="M159 256h61v128h-61z"/>
+  <path d="M138 154h78l40 169 80-169h78L282 390h-56z" fill="#F8FAFC"/>
+  <path d="M350 174h30v76h-30z" fill="#5EEAD4"/>
+  <path d="M306 222h30v76h-30z" fill="#99F6E4"/>
+  <path d="M262 270h30v76h-30z" fill="#CCFBF1"/>
 </svg>
