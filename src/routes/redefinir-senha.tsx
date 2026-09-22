@@ -30,8 +30,8 @@ function ResetPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (password.length < 6) {
-      toast.error("A senha precisa ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      toast.error("A senha precisa ter pelo menos 8 caracteres.");
       return;
     }
     setSubmitting(true);
@@ -69,10 +69,10 @@ function ResetPage() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo de 6 caracteres"
+              placeholder="Mínimo de 8 caracteres"
             />
           </div>
           <Button type="submit" className="min-h-11 w-full" disabled={submitting}>

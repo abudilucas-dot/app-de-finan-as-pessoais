@@ -70,7 +70,7 @@ function SettingsPage() {
     if (!user) return;
     setExporting(true);
     try {
-      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments] = await Promise.all([
+      const [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments, categories, notificationDismissals, legalAcceptances] = await Promise.all([
         supabase.from("accounts").select("*").eq("user_id", user.id),
         supabase.from("credit_cards").select("*").eq("user_id", user.id),
         supabase.from("debit_cards").select("*").eq("user_id", user.id),
@@ -81,11 +81,19 @@ function SettingsPage() {
         supabase.from("recurring_rules").select("*").eq("user_id", user.id),
         supabase.from("financial_debts").select("*").eq("user_id", user.id),
         supabase.from("debt_payments").select("*").eq("user_id", user.id),
+        supabase.from("categories").select("*").or(`user_id.eq.${user.id},user_id.is.null`),
+        supabase.from("notification_dismissals").select("*").eq("user_id", user.id),
+        supabase.from("legal_acceptances").select("*").eq("user_id", user.id).order("accepted_at"),
       ]);
-      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments];
+      const result = [accounts, creditCards, debitCards, transactions, budgets, goals, contributions, recurrences, debts, debtPayments, categories, notificationDismissals, legalAcceptances];
       const failed = result.find((item) => item.error);
       if (failed?.error) throw failed.error;
       const rows = [
+        ...(profile ? [["Perfil", profile.id, profile.full_name ?? "", profile.monthly_income ?? "", profile.payday ?? "", profile.financial_objective ?? "", profile.onboarding_completed ? "Onboarding concluído" : "Onboarding pendente", "", "", ""]] : []),
+        ...(settings ? [["Preferência", settings.id, "Configurações da conta", settings.currency, settings.locale, settings.timezone ?? "", settings.theme, settings.hide_values ? "Valores ocultos" : "Valores visíveis", "", ""]] : []),
+        ...(categories.data ?? []).map((item) => ["Categoria", item.id, item.name, item.type, item.icon ?? "", item.color ?? "", item.is_default ? "Padrão" : "Personalizada", item.user_id ? "Pessoal" : "Global", "", ""]),
+        ...(notificationDismissals.data ?? []).map((item) => ["Notificação dispensada", item.id, item.notification_key, item.dismissed_at, "", "", "", "", "", ""]),
+        ...(legalAcceptances.data ?? []).map((item) => ["Aceite legal", item.id, item.document_type, item.document_version, item.accepted_at, "", "", "", "", ""]),
         ...(accounts.data ?? []).map((item) => ["Conta", item.id, item.name, item.institution, item.type, item.initial_balance, "", "", item.is_archived, ""]),
         ...(creditCards.data ?? []).map((item) => ["Cartão de crédito", item.id, item.name, item.institution, item.brand, item.total_limit, item.closing_day, item.due_day, item.is_archived, ""]),
         ...(debitCards.data ?? []).map((item) => ["Cartão de débito", item.id, item.name, item.institution, item.brand, "", item.account_id, "", item.is_archived, ""]),
@@ -218,7 +226,7 @@ function SettingsPage() {
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, dívidas, orçamentos e recorrências.
+              Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, dívidas, orçamentos, recorrências e preferências.
             </p>
             {preparedBackup ? (
               <div className="mt-4 space-y-3">

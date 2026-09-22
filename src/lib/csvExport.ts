@@ -47,6 +47,15 @@ function money(value: unknown) {
     : "—";
 }
 
+function dateTime(value: unknown) {
+  const text = String(value ?? "");
+  if (!text) return "—";
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime())
+    ? readable(text)
+    : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(parsed);
+}
+
 function date(value: unknown) {
   const text = String(value ?? "");
   if (!text) return "—";
@@ -66,7 +75,27 @@ function createTables(rows: Array<Array<unknown>>): ReportTable[] {
 
   rows.forEach((row) => {
     const type = String(row[0] ?? "");
-    if (type === "Conta") {
+    if (type === "Perfil") {
+      ensure("Perfil", ["Nome", "Renda mensal", "Dia de pagamento", "Objetivo", "Onboarding"]).rows.push(
+        [readable(row[2]), money(row[3]), readable(row[4]), readable(row[5]), readable(row[6])],
+      );
+    } else if (type === "Preferência") {
+      ensure("Preferências", ["Moeda", "Idioma", "Fuso horário", "Tema", "Privacidade"]).rows.push(
+        [readable(row[3]), readable(row[4]), readable(row[5]), readable(row[6]), readable(row[7])],
+      );
+    } else if (type === "Categoria") {
+      ensure("Categorias", ["Nome", "Tipo", "Ícone", "Cor", "Origem"]).rows.push(
+        [readable(row[2]), readable(row[3]), readable(row[4]), readable(row[5]), readable(row[7])],
+      );
+    } else if (type === "Notificação dispensada") {
+      ensure("Notificações dispensadas", ["Identificador", "Dispensada em"]).rows.push(
+        [readable(row[2]), dateTime(row[3])],
+      );
+    } else if (type === "Aceite legal") {
+      ensure("Aceites legais", ["Documento", "Versão", "Aceito em"]).rows.push(
+        [readable(row[2]), readable(row[3]), dateTime(row[4])],
+      );
+    } else if (type === "Conta") {
       ensure("Contas", ["Nome", "Instituição", "Tipo", "Saldo inicial", "Arquivada"]).rows.push(
         [readable(row[2]), readable(row[3]), readable(row[4]), money(row[5]), readable(row[8])],
       );
@@ -94,9 +123,17 @@ function createTables(rows: Array<Array<unknown>>): ReportTable[] {
       ensure("Aportes em metas", ["Meta", "Valor", "Data", "Observações"]).rows.push(
         ["Meta cadastrada", money(row[5]), date(row[3]), readable(row[9])],
       );
-    } else if (type === "Recorrência") {
-      ensure("Recorrências", ["Descrição", "Tipo", "Frequência", "Valor", "Próxima ocorrência", "Ativa"]).rows.push(
+    } else if (type === "Recorrência" || type === "Assinatura") {
+      ensure(type === "Assinatura" ? "Assinaturas" : "Recorrências", ["Descrição", "Tipo", "Frequência", "Valor", "Próxima ocorrência", "Ativa"]).rows.push(
         [readable(row[2]), readable(row[3]), readable(row[4]), money(row[5]), date(row[6]), readable(row[7])],
+      );
+    } else if (type === "Dívida") {
+      ensure("Dívidas", ["Nome", "Instituição", "Status", "Saldo restante", "Próximo vencimento", "Parcelas", "Juros", "Observações"]).rows.push(
+        [readable(row[2]), readable(row[3]), readable(row[4]), money(row[5]), date(row[6]), readable(row[7]), readable(row[8]), readable(row[9])],
+      );
+    } else if (type === "Pagamento de dívida") {
+      ensure("Pagamentos de dívidas", ["Valor", "Data", "Conta vinculada", "Observações"]).rows.push(
+        [money(row[5]), date(row[3]), "Conta cadastrada", readable(row[9])],
       );
     }
   });
@@ -114,7 +151,7 @@ export function createCsvFile(filename: string, _headers: string[], rows: Array<
 
   const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup das finanças</title><style>
   :root{--primary:#0F766E;--ink:#0F172A;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC}*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.45}main{max-width:1180px;margin:0 auto;padding:28px 18px 48px}header{background:linear-gradient(135deg,#0F766E,#115E59);color:#fff;padding:30px;border-radius:18px;box-shadow:0 12px 30px rgba(15,118,110,.18)}h1{margin:0;font-size:clamp(25px,6vw,38px)}header p{margin:8px 0 0;opacity:.88}section{margin-top:24px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 3px 12px rgba(15,23,42,.04)}h2{margin:0;padding:17px 20px;font-size:20px;background:#F0FDFA;color:#115E59}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:600px;font-size:14px}th{background:var(--primary);color:#fff;text-align:left;padding:12px 14px;white-space:nowrap}td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}tbody tr:nth-child(even){background:#FAFEFD}tbody tr:last-child td{border-bottom:0}footer{margin-top:24px;color:var(--muted);font-size:13px;text-align:center}@media print{body{background:#fff}main{max-width:none;padding:0}header{box-shadow:none}section{break-inside:avoid;box-shadow:none}}
-  </style></head><body><main><header><h1>Backup das suas finanças</h1><p>Gerado em ${escapeHtml(new Date().toLocaleString("pt-BR"))}</p></header>${sections || '<section><h2>Sem dados</h2></section>'}<footer>Arquivo gerado pelo aplicativo Finanças. Valores em reais (R$).</footer></main></body></html>`;
+  </style></head><body><main><header><h1>Backup das suas finanças</h1><p>Gerado em ${escapeHtml(new Date().toLocaleString("pt-BR"))}</p></header>${sections || '<section><h2>Sem dados</h2></section>'}<footer>Arquivo gerado pelo aplicativo Valune. Valores em reais (R$).</footer></main></body></html>`;
 
   return new File([html], filename, { type: "text/html;charset=utf-8" });
 }

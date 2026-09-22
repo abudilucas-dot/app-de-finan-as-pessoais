@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { emailConfirmationRedirectUrl } from "@/config/authRedirect";
+import { legalDocuments } from "@/config/legal";
 import { brand } from "@/config/brand";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [resendingConfirmation, setResendingConfirmation] = useState(false);
@@ -72,8 +74,13 @@ function SignUpPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (password.length < 6) {
-      toast.error("A senha precisa ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      toast.error("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (!acceptedLegal) {
+      toast.error("Leia e aceite os Termos de Uso e a Política de Privacidade.");
       return;
     }
 
@@ -85,7 +92,11 @@ function SignUpPage() {
       password,
       options: {
         emailRedirectTo: emailConfirmationRedirectUrl(),
-        data: { full_name: fullName.trim() },
+        data: {
+          full_name: fullName.trim(),
+          terms_version: legalDocuments.terms.version,
+          privacy_version: legalDocuments.privacy.version,
+        },
       },
     });
 
@@ -238,16 +249,35 @@ function SignUpPage() {
             type="password"
             autoComplete="new-password"
             required
-            minLength={6}
+            minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo de 6 caracteres"
+            placeholder="Mínimo de 8 caracteres"
             aria-describedby="password-hint"
           />
           <p id="password-hint" className="text-xs text-muted-foreground">
-            Use pelo menos 6 caracteres.
+            Use pelo menos 8 caracteres.
           </p>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm leading-5">
+          <input
+            type="checkbox"
+            checked={acceptedLegal}
+            onChange={(event) => setAcceptedLegal(event.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 accent-primary"
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link to="/termos" target="_blank" className="font-medium text-primary hover:underline">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" target="_blank" className="font-medium text-primary hover:underline">
+              Política de Privacidade
+            </Link>.
+          </span>
+        </label>
 
         <Button type="submit" className="min-h-11 w-full" disabled={submitting}>
           {submitting ? "Criando conta..." : "Criar conta"}

@@ -35,6 +35,7 @@ Deno.serve(async (request) => {
   const userId = user.id;
   const tables = [
     "notification_dismissals",
+    "legal_acceptances",
     "debt_payments",
     "goal_contributions",
     "transactions",
@@ -57,6 +58,18 @@ Deno.serve(async (request) => {
       console.error("Failed deleting user data", { table, code: error.code });
       return Response.json({ error: "Não foi possível excluir a conta agora." }, { status: 500, headers: corsHeaders });
     }
+  }
+
+  const revokeResponse = await fetch(`${url}/auth/v1/logout?scope=global`, {
+    method: "POST",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!revokeResponse.ok) {
+    console.error("Failed revoking user sessions", { status: revokeResponse.status });
+    return Response.json({ error: "Não foi possível encerrar as sessões da conta agora." }, { status: 500, headers: corsHeaders });
   }
 
   const { error: deleteError } = await admin.auth.admin.deleteUser(userId);
