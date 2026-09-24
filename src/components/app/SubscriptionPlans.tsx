@@ -12,7 +12,7 @@ export function SubscriptionPlans({
   const isActive = subscription?.status === "active";
   const isBeta = subscription?.status === "beta";
 
-  if (isBeta || isActive) return null;
+  if (isBeta || isActive || subscription?.status === "trialing") return null;
 
   return (
     <div className="mt-5 grid gap-3 lg:grid-cols-2">
@@ -35,7 +35,7 @@ export function SubscriptionPlans({
             <p className="mt-2 text-sm text-muted-foreground">{plan.detail}</p>
             <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <Check className="h-4 w-4 text-positive" aria-hidden="true" />
-              Teste grátis de 7 dias já utilizado ou em andamento
+              Assinatura recorrente · acesso liberado após a confirmação do pagamento
             </p>
             {hasCheckout ? (
               <Button asChild className="mt-4 w-full">
