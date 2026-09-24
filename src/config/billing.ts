@@ -1,4 +1,4 @@
-export type BillingPlanCode = "pro_monthly" | "pro_annual";
+export type BillingPlanCode = "lifetime";
 
 export type BillingPlan = {
   code: BillingPlanCode;
@@ -12,21 +12,13 @@ export type BillingPlan = {
 
 export const billingPlans: BillingPlan[] = [
   {
-    code: "pro_monthly",
-    name: "Valune Pro Mensal",
-    priceLabel: "R$ 14,90",
-    cadence: "/ mês",
-    detail: "Acesso completo ao Valune Pro.",
-    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_MONTHLY_CHECKOUT_URL ?? "https://pay.kiwify.com.br/3TTonff",
-  },
-  {
-    code: "pro_annual",
-    name: "Valune Pro Anual",
-    priceLabel: "R$ 149,90",
-    cadence: "/ ano",
-    detail: "Acesso completo ao Valune Pro com economia de quase 2 meses.",
-    badge: "Melhor valor",
-    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_ANNUAL_CHECKOUT_URL ?? "https://pay.kiwify.com.br/9H4S9Xd",
+    code: "lifetime",
+    name: "Valune Vitalício",
+    priceLabel: "R$ 49,90",
+    cadence: " pagamento único",
+    detail: "Acesso completo ao Valune, sem mensalidade ou renovação.",
+    badge: "Oferta de lançamento",
+    checkoutUrl: import.meta.env.VITE_KIWIFY_LIFETIME_CHECKOUT_URL,
   },
 ];
 
