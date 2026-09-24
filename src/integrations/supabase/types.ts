@@ -56,6 +56,51 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_ends_at: string | null
+          external_subscription_id: string | null
+          last_provider_event_at: string | null
+          plan_code: string | null
+          provider: string
+          status: string
+          trial_ends_at: string
+          trial_started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_ends_at?: string | null
+          external_subscription_id?: string | null
+          last_provider_event_at?: string | null
+          plan_code?: string | null
+          provider?: string
+          status?: string
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_ends_at?: string | null
+          external_subscription_id?: string | null
+          last_provider_event_at?: string | null
+          plan_code?: string | null
+          provider?: string
+          status?: string
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       budgets: {
         Row: {
           amount_limit: number
