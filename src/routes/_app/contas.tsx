@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { moduleThemes } from "@/config/moduleThemes";
 import { toBalanceMap, useAccountBalances } from "@/hooks/useAccountBalances";
 import { type Account, useAccounts, useUpdateAccount } from "@/hooks/useAccounts";
 
@@ -59,6 +60,8 @@ function AccountsPage() {
     0,
   );
 
+  const theme = moduleThemes.accounts;
+
   const openCreate = () => {
     setEditing(null);
     setFormOpen(true);
@@ -86,17 +89,17 @@ function AccountsPage() {
         title="Contas"
         description="Gerencie onde seu dinheiro está guardado."
         actions={
-          <Button onClick={openCreate}>
+          <Button className={theme.primary} onClick={openCreate}>
             <Plus aria-hidden="true" />
             Nova conta
           </Button>
         }
       />
 
-      <section className="surface flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className={`surface flex flex-col gap-2 border p-5 sm:flex-row sm:items-center sm:justify-between ${theme.card}`}>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Saldo total atual</p>
-          <MoneyDisplay value={activeTotal} className="mt-1 block text-2xl font-semibold" />
+          <MoneyDisplay value={activeTotal} className={`mt-1 block text-2xl font-semibold ${theme.text}`} />
         </div>
         <p className="text-sm text-muted-foreground">
           {activeAccounts.length} {activeAccounts.length === 1 ? "conta ativa" : "contas ativas"}
@@ -105,7 +108,7 @@ function AccountsPage() {
 
       {activeAccounts.length ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Contas ativas</h2>
+          <h2 className={`text-lg font-semibold ${theme.text}`}>Contas ativas</h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {activeAccounts.map((account) => (
               <AccountCard
@@ -123,7 +126,7 @@ function AccountsPage() {
           icon={Wallet}
           title="Nenhuma conta ativa"
           description="Cadastre uma conta bancária, carteira digital ou dinheiro em espécie."
-          action={<Button onClick={openCreate}>Adicionar conta</Button>}
+          action={<Button className={theme.primary} onClick={openCreate}>Adicionar conta</Button>}
         />
       )}
 

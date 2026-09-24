@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { moduleThemes } from "@/config/moduleThemes";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useArchiveDebt, useDebtSummaries } from "@/hooks/useDebts";
 import type { DebtSummary } from "@/lib/debts";
@@ -41,6 +42,8 @@ function DebtsPage() {
   const totalRemaining = openDebts.reduce((sum, debt) => sum + Number(debt.remaining_amount), 0);
   const totalInitial = items.reduce((sum, debt) => sum + Number(debt.initial_amount), 0);
 
+  const theme = moduleThemes.debts;
+
   const archive = async (debt: DebtSummary) => {
     if (!window.confirm("Arquivar “" + debt.name + "”? Os pagamentos e lançamentos serão mantidos no histórico.")) return;
     try {
@@ -56,14 +59,14 @@ function DebtsPage() {
       <PageHeader
         title="Dívidas"
         description="Acompanhe empréstimos, financiamentos e valores que ainda faltam quitar."
-        actions={<Button onClick={() => { setEditingDebt(null); setFormOpen(true); }}><Plus aria-hidden="true" />Nova dívida</Button>}
+        actions={<Button className={theme.primary} onClick={() => { setEditingDebt(null); setFormOpen(true); }}><Plus aria-hidden="true" />Nova dívida</Button>}
       />
 
       {items.length ? (
         <>
           <section className="grid gap-4 sm:grid-cols-2">
-            <article className="surface p-5"><p className="text-sm text-muted-foreground">Total em aberto</p><MoneyDisplay value={totalRemaining} className="mt-2 block text-2xl font-semibold text-negative" /></article>
-            <article className="surface p-5"><p className="text-sm text-muted-foreground">Valor inicial cadastrado</p><MoneyDisplay value={totalInitial} className="mt-2 block text-2xl font-semibold" /></article>
+            <article className={`surface border p-5 ${theme.card}`}><p className="text-sm text-muted-foreground">Total em aberto</p><MoneyDisplay value={totalRemaining} className="mt-2 block text-2xl font-semibold text-negative" /></article>
+            <article className="surface border border-orange-500/20 bg-gradient-to-br from-orange-500/10 via-rose-500/5 to-transparent p-5"><p className="text-sm text-muted-foreground">Valor inicial cadastrado</p><MoneyDisplay value={totalInitial} className="mt-2 block text-2xl font-semibold text-rose-700 dark:text-rose-300" /></article>
           </section>
           <section className="grid gap-4 xl:grid-cols-2">
             {items.map((debt) => (
@@ -79,7 +82,7 @@ function DebtsPage() {
           </section>
         </>
       ) : (
-        <EmptyState icon={Landmark} title="Nenhuma dívida cadastrada" description="Cadastre uma dívida para visualizar o que falta quitar e registrar pagamentos." action={<Button onClick={() => setFormOpen(true)}>Cadastrar primeira dívida</Button>} />
+        <EmptyState icon={Landmark} title="Nenhuma dívida cadastrada" description="Cadastre uma dívida para visualizar o que falta quitar e registrar pagamentos." action={<Button className={theme.primary} onClick={() => setFormOpen(true)}>Cadastrar primeira dívida</Button>} />
       )}
 
       <DebtFormDialog open={formOpen} onOpenChange={setFormOpen} debt={editingDebt} />

@@ -2,11 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight, CircleHelp, Download, Mail, MessageCircle, ReceiptText, Trash2, WalletCards } from "lucide-react";
 
 import { PageHeader } from "@/components/app/PageHeader";
+import { moduleThemes } from "@/config/moduleThemes";
 
 export const Route = createFileRoute("/_app/ajuda")({
   head: () => ({ meta: [{ title: "Ajuda — Valune" }] }),
   component: HelpPage,
 });
+
+const topicThemes = [moduleThemes.cards, moduleThemes.support, moduleThemes.trash, moduleThemes.export] as const;
 
 const topics = [
   {
@@ -40,13 +43,15 @@ const topics = [
 ] as const;
 
 function HelpPage() {
+  const theme = moduleThemes.support;
+
   return (
     <div className="space-y-6">
       <PageHeader title="Ajuda e suporte" description="Encontre respostas rápidas sobre o uso do aplicativo." />
 
-      <section className="surface p-5 sm:p-6">
+      <section className={`surface border p-5 sm:p-6 ${theme.card}`}>
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.icon}`}>
             <CircleHelp className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -59,16 +64,17 @@ function HelpPage() {
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
-        {topics.map((topic) => {
+        {topics.map((topic, index) => {
           const Icon = topic.icon;
+          const topicTheme = topicThemes[index]!;
           return (
-            <Link key={topic.title} to={topic.to} className="surface group flex min-h-44 flex-col p-5 transition-colors hover:bg-accent/50">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+            <Link key={topic.title} to={topic.to} className={`surface group flex min-h-44 flex-col border p-5 transition-all hover:-translate-y-0.5 hover:shadow-md ${topicTheme.card}`}>
+              <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${topicTheme.icon}`}>
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
               <h2 className="mt-4 font-semibold">{topic.title}</h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">{topic.text}</p>
-              <span className="mt-auto pt-4 text-sm font-medium text-primary">
+              <span className={`mt-auto pt-4 text-sm font-medium ${topicTheme.text}`}>
                 {topic.action} <ChevronRight className="inline h-4 w-4" aria-hidden="true" />
               </span>
             </Link>
@@ -76,8 +82,8 @@ function HelpPage() {
         })}
       </section>
 
-      <section className="surface p-5 sm:p-6">
-        <h2 className="font-semibold">Ainda precisa de ajuda?</h2>
+      <section className={`surface border p-5 sm:p-6 ${theme.card}`}>
+        <h2 className={`font-semibold ${theme.text}`}>Ainda precisa de ajuda?</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Fale conosco pelo canal que preferir. Ao enviar uma mensagem, não compartilhe senha, códigos de confirmação ou dados de cartão.
         </p>

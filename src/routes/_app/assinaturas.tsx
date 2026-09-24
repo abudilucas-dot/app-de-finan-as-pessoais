@@ -9,6 +9,7 @@ import { RecurringRuleFormDialog } from "@/components/app/RecurringRuleFormDialo
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { moduleThemes } from "@/config/moduleThemes";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
 import {
@@ -62,6 +63,8 @@ function SubscriptionsPage() {
     .map((item) => item.next_occurrence)
     .sort((a, b) => a.localeCompare(b))[0];
 
+  const theme = moduleThemes.subscriptions;
+
   const complete = async (rule: RecurringRule) => {
     if (!window.confirm(`Marcar a cobrança de “${rule.description}” como paga? Isso criará uma despesa e atualizará seu saldo.`)) return;
     try {
@@ -102,16 +105,16 @@ function SubscriptionsPage() {
       <PageHeader
         title="Assinaturas"
         description="Acompanhe seus serviços recorrentes sem esquecer nenhuma cobrança."
-        actions={<Button onClick={() => { setEditingSubscription(null); setFormOpen(true); }}><Plus aria-hidden="true" />Nova assinatura</Button>}
+        actions={<Button className={theme.primary} onClick={() => { setEditingSubscription(null); setFormOpen(true); }}><Plus aria-hidden="true" />Nova assinatura</Button>}
       />
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <article className="surface p-5">
+        <article className={`surface border p-5 ${theme.card}`}>
           <p className="text-sm text-muted-foreground">Total mensal estimado</p>
           <MoneyDisplay value={monthlyTotal} className="mt-2 block text-2xl font-semibold text-negative" />
           <p className="mt-2 text-xs text-muted-foreground">Considera somente assinaturas ativas.</p>
         </article>
-        <article className="surface p-5">
+        <article className="surface border border-fuchsia-500/20 bg-gradient-to-br from-fuchsia-500/10 via-pink-500/5 to-transparent p-5">
           <p className="text-sm text-muted-foreground">Próxima cobrança</p>
           <p className="mt-2 text-2xl font-semibold">{nextCharge ? formatScheduledDate(nextCharge) : "Nenhuma"}</p>
           <p className="mt-2 text-xs text-muted-foreground">{activeItems.length} {activeItems.length === 1 ? "assinatura ativa" : "assinaturas ativas"}.</p>
@@ -121,9 +124,9 @@ function SubscriptionsPage() {
       {items.length ? (
         <section className="grid gap-4 xl:grid-cols-2">
           {items.map((subscription) => (
-            <article key={subscription.id} className="surface flex flex-col gap-5 p-5">
+            <article key={subscription.id} className={`surface flex flex-col gap-5 border p-5 ${theme.card}`}>
               <div className="flex gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-pink-500/15 text-pink-700 dark:text-pink-300">
                   <Repeat2 className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -147,7 +150,7 @@ function SubscriptionsPage() {
 
               <div className="flex flex-wrap gap-2">
                 {subscription.active ? (
-                  <Button size="sm" onClick={() => complete(subscription)} disabled={completeRule.isPending}>
+                  <Button className={theme.primary} size="sm" onClick={() => complete(subscription)} disabled={completeRule.isPending}>
                     Marcar como paga
                   </Button>
                 ) : null}
@@ -170,7 +173,7 @@ function SubscriptionsPage() {
           icon={Repeat2}
           title="Nenhuma assinatura cadastrada"
           description="Cadastre serviços como streaming, academia, internet ou apps pagos para acompanhar o impacto mensal."
-          action={<Button onClick={() => setFormOpen(true)}>Cadastrar primeira assinatura</Button>}
+          action={<Button className={theme.primary} onClick={() => setFormOpen(true)}>Cadastrar primeira assinatura</Button>}
         />
       )}
 

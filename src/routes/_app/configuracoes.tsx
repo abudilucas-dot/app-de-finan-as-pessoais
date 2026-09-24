@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { brand } from "@/config/brand";
+import { moduleThemes } from "@/config/moduleThemes";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
@@ -36,6 +37,8 @@ function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [preparedBackup, setPreparedBackup] = useState<File | null>(null);
   const [savingBackup, setSavingBackup] = useState(false);
+  const settingsTheme = moduleThemes.settings;
+  const exportTheme = moduleThemes.export;
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -155,9 +158,9 @@ function SettingsPage() {
     <div className="space-y-8">
       <PageHeader title="Configurações" description="Gerencie seu perfil e suas preferências." />
 
-      <section className="surface p-5 sm:p-6">
+      <section className={`surface border p-5 sm:p-6 ${settingsTheme.card}`}>
         <div className="mb-5 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+          <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${settingsTheme.icon}`}>
             <UserRound className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
@@ -181,14 +184,14 @@ function SettingsPage() {
             <Input id="account-email" value={user?.email ?? ""} readOnly disabled />
           </div>
           <div>
-            <Button type="submit" disabled={updateProfile.isPending}>
+            <Button className={settingsTheme.primary} type="submit" disabled={updateProfile.isPending}>
               {updateProfile.isPending ? "Salvando..." : "Salvar perfil"}
             </Button>
           </div>
         </form>
       </section>
 
-      <section className="surface divide-y">
+      <section className={`surface divide-y border ${settingsTheme.card}`}>
         <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
             <h2 className="font-semibold">Tema</h2>
@@ -221,9 +224,9 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="surface p-5 sm:p-6">
+      <section className={`surface border p-5 sm:p-6 ${exportTheme.card}`}>
         <div className="flex items-start gap-3">
-          <Download className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${exportTheme.icon}`}><Download className="h-5 w-5" aria-hidden="true" /></span>
           <div>
             <h2 className="font-semibold">Exportar dados</h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -238,7 +241,7 @@ function SettingsPage() {
                   Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button onClick={savePreparedBackup} disabled={savingBackup}>
+                  <Button className={exportTheme.primary} onClick={savePreparedBackup} disabled={savingBackup}>
                     <Download aria-hidden="true" />
                     {savingBackup ? "Abrindo opções..." : "Salvar em Arquivos ou compartilhar"}
                   </Button>
@@ -248,7 +251,7 @@ function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <Button className="mt-4" variant="outline" onClick={exportData} disabled={exporting}>
+              <Button className={`mt-4 border-teal-500/45 ${exportTheme.text} hover:bg-teal-500/15`} variant="outline" onClick={exportData} disabled={exporting}>
                 <Download aria-hidden="true" />
                 {exporting ? "Preparando arquivo..." : "Preparar relatório financeiro"}
               </Button>
@@ -261,8 +264,8 @@ function SettingsPage() {
 
       <DeleteAccountSection />
 
-      <section className="surface p-5 sm:p-6">
-        <h2 className="font-semibold">Sessão</h2>
+      <section className={`surface border p-5 sm:p-6 ${settingsTheme.card}`}>
+        <h2 className={`font-semibold ${settingsTheme.text}`}>Sessão</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Encerre o acesso da sua conta neste dispositivo.
         </p>

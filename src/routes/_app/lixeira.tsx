@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
 import { PageHeader } from "@/components/app/PageHeader";
+import { moduleThemes } from "@/config/moduleThemes";
 import { Button } from "@/components/ui/button";
 import { useCategories } from "@/hooks/useCategories";
 import { useCreditCards } from "@/hooks/useCreditCards";
@@ -106,6 +107,8 @@ function TrashPage() {
     return result;
   }, [cards.data, categories.data, debitCards.data, transactions.data]);
 
+  const theme = moduleThemes.trash;
+
   const restoreItem = async (item: TrashItem) => {
     try {
       const count = await restore.mutateAsync(item.id);
@@ -121,6 +124,16 @@ function TrashPage() {
         title="Lixeira"
         description="As movimentações ficam disponíveis para restauração por até 30 dias antes da exclusão definitiva."
       />
+
+      <section className={`surface flex items-start gap-3 border p-4 ${theme.card}`}>
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.icon}`}>
+          <Trash2 className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 className={`font-semibold ${theme.text}`}>Recuperação por 30 dias</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Você pode restaurar uma movimentação dentro desse período antes que ela seja apagada definitivamente.</p>
+        </div>
+      </section>
 
       {transactions.isLoading || categories.isLoading || cards.isLoading || debitCards.isLoading ? (
         <LoadingState label="Carregando a lixeira..." />
@@ -143,14 +156,14 @@ function TrashPage() {
       ) : null}
 
       {!transactions.isLoading && !transactions.isError && items.length > 0 ? (
-        <div className="surface divide-y">
+        <div className={`surface divide-y overflow-hidden border ${theme.card}`}>
           {items.map((item) => {
             const Icon = item.icon;
             const restoring = restore.isPending && restore.variables === item.id;
             return (
               <article key={item.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-400/15 text-slate-700 dark:text-slate-300">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
@@ -161,7 +174,7 @@ function TrashPage() {
                 </div>
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <MoneyDisplay value={item.amount} className="font-semibold" />
-                  <Button size="sm" variant="outline" onClick={() => void restoreItem(item)} disabled={restoring}>
+                  <Button className="border-slate-400/50 text-slate-700 hover:bg-slate-400/15 dark:text-slate-200" size="sm" variant="outline" onClick={() => void restoreItem(item)} disabled={restoring}>
                     {restoring ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RotateCcw aria-hidden="true" />}
                     Restaurar
                   </Button>
