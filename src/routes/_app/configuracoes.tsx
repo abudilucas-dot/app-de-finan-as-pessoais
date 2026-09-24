@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { DeleteAccountSection } from "@/components/app/DeleteAccountSection";
+import { SubscriptionPlans } from "@/components/app/SubscriptionPlans";
 import { ResetFinancialDataSection } from "@/components/app/ResetFinancialDataSection";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
@@ -260,6 +261,7 @@ function SettingsPage() {
             )}
           </div>
         </div>
+        <SubscriptionPlans subscription={billing.data ?? null} />
       </section>
 
       <section className={`surface border p-5 sm:p-6 ${exportTheme.card}`}>
