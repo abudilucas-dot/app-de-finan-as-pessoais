@@ -24,8 +24,8 @@ export function InstallmentPurchaseItem({
   invoicesById: ReadonlyMap<string, CreditCardInvoice>;
   categoryName?: string;
   cardName?: string;
-  onCancel: (transaction: FinancialTransaction) => void;
-  onEdit: (transaction: FinancialTransaction) => void;
+  onCancel?: (transaction: FinancialTransaction) => void;
+  onEdit?: (transaction: FinancialTransaction) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const orderedInstallments = [...installments].sort(
@@ -84,22 +84,26 @@ export function InstallmentPurchaseItem({
           >
             {expanded ? <ChevronUp /> : <ChevronDown />}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onCancel(first)}
-            aria-label={`Cancelar compra no cartão: ${description}`}
-          >
-            <Trash2 />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(first)}
-            aria-label={`Editar compra no cartão: ${description}`}
-          >
-            <Pencil />
-          </Button>
+          {onCancel ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onCancel(first)}
+              aria-label={`Cancelar compra no cartão: ${description}`}
+            >
+              <Trash2 />
+            </Button>
+          ) : null}
+          {onEdit ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(first)}
+              aria-label={`Editar compra no cartão: ${description}`}
+            >
+              <Pencil />
+            </Button>
+          ) : null}
         </div>
       </div>
 
