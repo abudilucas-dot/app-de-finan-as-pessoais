@@ -203,3 +203,18 @@ export function usePayCreditCardInvoice() {
     onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
   });
 }
+
+
+export function useDeleteCreditCardPayment() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase.rpc("delete_credit_card_payment", {
+        p_transaction_id: transactionId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
+  });
+}

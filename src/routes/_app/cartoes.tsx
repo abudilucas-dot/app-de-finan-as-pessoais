@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Archive,
+  ChevronDown,
+  ChevronUp,
   CreditCard as CreditCardIcon,
   Landmark,
   Pencil,
@@ -73,6 +75,100 @@ function invoiceStatus(status: CreditCardInvoice["status"]) {
         : "Aberta";
 }
 
+
+type InstallmentInvoiceItem = {
+  transaction: FinancialTransaction;
+  invoice: CreditCardInvoice;
+  amount: number;
+  isPaid: boolean;
+};
+
+type InstallmentInvoiceGroup = {
+  id: string;
+  cardId: string;
+  description: string;
+  totalInstallments: number;
+  totalAmount: number;
+  paidCount: number;
+  openItems: InstallmentInvoiceItem[];
+  items: InstallmentInvoiceItem[];
+  nextItem: InstallmentInvoiceItem;
+};
+
+function stripInstallmentSuffix(description: string) {
+  return description.replace(/ \(\d+\/\d+\)$/, "");
+}
+
+function buildInstallmentInvoiceGroups(
+  transactions: FinancialTransaction[],
+  invoices: CreditCardInvoice[],
+  balances: Map<string, number>,
+) {
+  const invoiceById = new Map(invoices.map((invoice) => [invoice.id, invoice]));
+  const byGroup = new Map<string, FinancialTransaction[]>();
+
+  for (const transaction of transactions) {
+    if (
+      transaction.type !== "expense" ||
+      !transaction.credit_card_id ||
+      !transaction.installment_group_id ||
+      (transaction.total_installments ?? 1) < 2 ||
+      !transaction.invoice_id
+    ) {
+      continue;
+    }
+    const invoice = invoiceById.get(transaction.invoice_id);
+    if (!invoice) continue;
+    const entries = byGroup.get(transaction.installment_group_id) ?? [];
+    entries.push(transaction);
+    byGroup.set(transaction.installment_group_id, entries);
+  }
+
+  return [...byGroup.entries()]
+    .map(([id, transactionsInGroup]) => {
+      const items = transactionsInGroup
+        .map((transaction) => {
+          const invoice = invoiceById.get(transaction.invoice_id!);
+          if (!invoice) return null;
+          const isPaid =
+            invoice.status === "paid" || (balances.get(invoice.id) ?? 0) <= 0.005;
+          return {
+            transaction,
+            invoice,
+            amount: Number(transaction.amount),
+            isPaid,
+          } satisfies InstallmentInvoiceItem;
+        })
+        .filter((item): item is InstallmentInvoiceItem => Boolean(item))
+        .sort((a, b) => {
+          const installmentDifference =
+            (a.transaction.installment_number ?? 1) - (b.transaction.installment_number ?? 1);
+          return installmentDifference || a.invoice.due_date.localeCompare(b.invoice.due_date);
+        });
+
+      const openItems = items
+        .filter((item) => !item.isPaid)
+        .sort((a, b) => a.invoice.due_date.localeCompare(b.invoice.due_date));
+      const first = items[0];
+      const nextItem = openItems[0];
+      if (!first || !nextItem) return null;
+
+      return {
+        id,
+        cardId: first.transaction.credit_card_id!,
+        description: stripInstallmentSuffix(first.transaction.description),
+        totalInstallments: first.transaction.total_installments ?? items.length,
+        totalAmount: items.reduce((total, item) => total + item.amount, 0),
+        paidCount: items.filter((item) => item.isPaid).length,
+        openItems,
+        items,
+        nextItem,
+      } satisfies InstallmentInvoiceGroup;
+    })
+    .filter((group): group is InstallmentInvoiceGroup => Boolean(group))
+    .sort((a, b) => a.nextItem.invoice.due_date.localeCompare(b.nextItem.invoice.due_date));
+}
+
 function CreditCardsPage() {
   const cards = useCreditCards();
   const summaries = useCreditCardSummaries();
@@ -89,6 +185,7 @@ function CreditCardsPage() {
   const [editingDebit, setEditingDebit] = useState<DebitCard | null>(null);
   const [expenseCard, setExpenseCard] = useState<CreditCard | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<CreditCard | null>(null);
+  const [expandedPurchaseId, setExpandedPurchaseId] = useState<string | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<{
     invoice: CreditCardInvoice;
     card: CreditCard;
@@ -121,6 +218,19 @@ function CreditCardsPage() {
     () => invoiceBalances(transactions.data ?? []),
     [transactions.data],
   );
+  const installmentInvoiceGroups = useMemo(
+    () =>
+      buildInstallmentInvoiceGroups(
+        transactions.data ?? [],
+        invoices.data ?? [],
+        invoiceBalanceById,
+      ),
+    [transactions.data, invoices.data, invoiceBalanceById],
+  );
+  const installmentInvoiceIds = useMemo(
+    () => new Set(installmentInvoiceGroups.flatMap((group) => group.items.map((item) => item.invoice.id))),
+    [installmentInvoiceGroups],
+  );
 
   if (loading || debitLoading) return <LoadingState label="Carregando seus cartões..." />;
   if (failure || debitFailure)
@@ -145,6 +255,9 @@ function CreditCardsPage() {
   const archivedDebitCards = allDebitCards.filter((card) => card.is_archived);
   const pendingInvoices = (invoices.data ?? []).filter(
     (invoice) => (invoiceBalanceById.get(invoice.id) ?? 0) > 0.005 && invoice.status !== "paid",
+  );
+  const standalonePendingInvoices = pendingInvoices.filter(
+    (invoice) => !installmentInvoiceIds.has(invoice.id),
   );
   const totalAvailable = activeCards.reduce(
     (total, card) =>
@@ -220,7 +333,7 @@ function CreditCardsPage() {
       />
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <article className="surface p-5">
+        <article className="surface border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent p-5">
           <p className="text-sm text-muted-foreground">Limite disponível</p>
           <MoneyDisplay
             value={totalAvailable}
@@ -228,7 +341,7 @@ function CreditCardsPage() {
           />
           <p className="mt-2 text-xs text-muted-foreground">Somente cartões ativos.</p>
         </article>
-        <article className="surface p-5">
+        <article className="surface border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-orange-500/5 to-transparent p-5">
           <p className="text-sm text-muted-foreground">Faturas em aberto</p>
           <MoneyDisplay
             value={totalOutstanding}
@@ -425,39 +538,150 @@ function CreditCardsPage() {
 
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <ReceiptText className="h-5 w-5 text-primary" aria-hidden="true" />
-          <h2 className="text-lg font-semibold">Faturas para pagar</h2>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/15 text-violet-700 dark:text-violet-300">
+            <ReceiptText className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold">Faturas e compras parceladas</h2>
+            <p className="text-sm text-muted-foreground">
+              Parcelas da mesma compra ficam juntas para deixar sua fatura mais clara.
+            </p>
+          </div>
         </div>
+
         {pendingInvoices.length ? (
-          <div className="surface divide-y">
-            {pendingInvoices.map((invoice) => {
-              const card = cardById.get(invoice.credit_card_id);
-              const amount = invoiceBalanceById.get(invoice.id) ?? 0;
-              return (
-                <article
-                  key={invoice.id}
-                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <h3 className="font-semibold">{card?.name ?? "Cartão"}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Fatura {invoiceStatus(invoice.status).toLowerCase()} · vence em{" "}
-                      {formatShortDate(invoice.due_date)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MoneyDisplay value={amount} className="text-base font-semibold" />
-                    <Button
-                      size="sm"
-                      disabled={!card}
-                      onClick={() => card && setPaymentTarget({ invoice, card, amount })}
+          <div className="space-y-4">
+            {installmentInvoiceGroups.length ? (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground">Compras parceladas</h3>
+                {installmentInvoiceGroups.map((group, index) => {
+                  const card = cardById.get(group.cardId);
+                  const accent = [
+                    "border-violet-500/25 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent",
+                    "border-sky-500/25 bg-gradient-to-br from-sky-500/10 via-cyan-500/5 to-transparent",
+                    "border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent",
+                    "border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent",
+                  ][index % 4]!;
+                  const expanded = expandedPurchaseId === group.id;
+                  const nextAmount = invoiceBalanceById.get(group.nextItem.invoice.id) ?? 0;
+                  return (
+                    <article key={group.id} className={`surface overflow-hidden border ${accent}`}>
+                      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate font-semibold">{group.description}</h3>
+                            <span className="rounded-full bg-foreground/8 px-2 py-0.5 text-xs font-semibold">
+                              {group.totalInstallments}x
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {card?.name ?? "Cartão"} · {group.paidCount} paga{group.paidCount === 1 ? "" : "s"} · {group.openItems.length} em aberto
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <span className="text-xs text-muted-foreground">Total da compra</span>
+                            <MoneyDisplay value={group.totalAmount} className="text-base font-semibold" />
+                            <span className="text-xs text-muted-foreground">
+                              Próximo vencimento: {formatShortDate(group.nextItem.invoice.due_date)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setExpandedPurchaseId(expanded ? null : group.id)}
+                            aria-expanded={expanded}
+                          >
+                            {expanded ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
+                            {expanded ? "Ocultar parcelas" : "Ver parcelas"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={!card}
+                            onClick={() =>
+                              card &&
+                              setPaymentTarget({
+                                invoice: group.nextItem.invoice,
+                                card,
+                                amount: nextAmount,
+                              })
+                            }
+                          >
+                            Pagar próxima
+                          </Button>
+                        </div>
+                      </div>
+
+                      {expanded ? (
+                        <div className="border-t bg-background/45 px-4 py-2 sm:px-5">
+                          {group.items.map((item) => (
+                            <div
+                              key={item.transaction.id}
+                              className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border/70 py-3 last:border-b-0"
+                            >
+                              <div>
+                                <p className="text-sm font-medium">
+                                  Parcela {item.transaction.installment_number ?? 1}/{group.totalInstallments}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Vence em {formatShortDate(item.invoice.due_date)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={item.isPaid
+                                    ? "rounded-full bg-positive/10 px-2 py-0.5 text-xs font-semibold text-positive"
+                                    : "rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300"}
+                                >
+                                  {item.isPaid ? "Paga" : "Em aberto"}
+                                </span>
+                                <MoneyDisplay value={item.amount} className="text-sm font-semibold" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {standalonePendingInvoices.length ? (
+              <div className="surface divide-y overflow-hidden border border-sky-500/20">
+                <div className="bg-sky-500/5 px-4 py-3">
+                  <h3 className="text-sm font-semibold">Faturas avulsas</h3>
+                </div>
+                {standalonePendingInvoices.map((invoice) => {
+                  const card = cardById.get(invoice.credit_card_id);
+                  const amount = invoiceBalanceById.get(invoice.id) ?? 0;
+                  return (
+                    <article
+                      key={invoice.id}
+                      className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      Pagar fatura
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
+                      <div className="min-w-0">
+                        <h3 className="font-semibold">{card?.name ?? "Cartão"}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Fatura {invoiceStatus(invoice.status).toLowerCase()} · vence em{" "}
+                          {formatShortDate(invoice.due_date)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <MoneyDisplay value={amount} className="text-base font-semibold" />
+                        <Button
+                          size="sm"
+                          disabled={!card}
+                          onClick={() => card && setPaymentTarget({ invoice, card, amount })}
+                        >
+                          Pagar fatura
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         ) : (
           <EmptyState

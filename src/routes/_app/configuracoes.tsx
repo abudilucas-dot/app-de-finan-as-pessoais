@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { DeleteAccountSection } from "@/components/app/DeleteAccountSection";
+import { ResetFinancialDataSection } from "@/components/app/ResetFinancialDataSection";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { LoadingState } from "@/components/app/states";
@@ -255,6 +256,8 @@ function SettingsPage() {
           </div>
         </div>
       </section>
+
+      <ResetFinancialDataSection />
 
       <DeleteAccountSection />
 
