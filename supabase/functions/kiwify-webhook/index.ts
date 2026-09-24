@@ -298,6 +298,16 @@ Deno.serve(async (request) => {
     }
 
     const planCode = inferPlan(payload);
+    if (!planCode && newStatus === "active") {
+      console.info("Kiwify plan could not be inferred", JSON.stringify({
+        topLevelKeys: Object.keys(payload).sort(),
+        subscriptionKeys: Object.keys(asRecord(payload.Subscription ?? payload.subscription)).sort(),
+        orderKeys: Object.keys(asRecord(payload.Order ?? payload.order)).sort(),
+        productKeys: Object.keys(asRecord(payload.Product ?? payload.product)).sort(),
+        offerKeys: Object.keys(asRecord(payload.Offer ?? payload.offer)).sort(),
+      }));
+    }
+
     const update = {
       provider: "kiwify",
       status: newStatus,
