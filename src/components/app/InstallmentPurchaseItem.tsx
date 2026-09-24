@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
 import { Button } from "@/components/ui/button";
+import type { CreditCardInvoice } from "@/lib/creditCards";
 import { formatTransactionDate } from "@/lib/transactions";
 import type { FinancialTransaction } from "@/lib/transactions";
 import { cn } from "@/lib/utils";
@@ -13,12 +14,14 @@ function purchaseDescription(transaction: FinancialTransaction) {
 
 export function InstallmentPurchaseItem({
   installments,
+  invoicesById,
   categoryName,
   cardName,
   onCancel,
   onEdit,
 }: {
   installments: FinancialTransaction[];
+  invoicesById: ReadonlyMap<string, CreditCardInvoice>;
   categoryName?: string;
   cardName?: string;
   onCancel: (transaction: FinancialTransaction) => void;
@@ -34,6 +37,13 @@ export function InstallmentPurchaseItem({
   const total = orderedInstallments.reduce((sum, item) => sum + Number(item.amount), 0);
   const totalInstallments = first.total_installments ?? orderedInstallments.length;
   const description = purchaseDescription(first);
+  const paidInstallments = orderedInstallments.filter(
+    (installment) => invoicesById.get(installment.invoice_id ?? "")?.status === "paid",
+  );
+  const openInstallments = orderedInstallments.filter(
+    (installment) => invoicesById.get(installment.invoice_id ?? "")?.status !== "paid",
+  );
+  const openTotal = openInstallments.reduce((sum, item) => sum + Number(item.amount), 0);
 
   return (
     <article className="border-b py-4 last:border-b-0">
@@ -56,7 +66,7 @@ export function InstallmentPurchaseItem({
             </span>
           </div>
           <p className="truncate text-xs text-muted-foreground">
-            {categoryName ?? "Sem categoria"} · {cardName ?? "Cartão"} · Toque para ver parcelas
+            {categoryName ?? "Sem categoria"} · {cardName ?? "Cartão"} · {paidInstallments.length} paga{paidInstallments.length === 1 ? "" : "s"} · {openInstallments.length} em aberto
           </p>
         </button>
 
@@ -96,28 +106,50 @@ export function InstallmentPurchaseItem({
       {expanded ? (
         <div className="mt-4 rounded-xl border bg-muted/20 p-3 sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>{orderedInstallments.length} de {totalInstallments} parcelas ativas</span>
             <span>
-              Total <MoneyDisplay value={total} />
+              {paidInstallments.length} paga{paidInstallments.length === 1 ? "" : "s"} · {openInstallments.length} em aberto
+            </span>
+            <span>
+              Em aberto <MoneyDisplay value={openTotal} />
             </span>
           </div>
           <div className="divide-y">
-            {orderedInstallments.map((installment) => (
-              <div
-                key={installment.id}
-                className="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium">
-                    Parcela {installment.installment_number ?? "—"}/{installment.total_installments ?? totalInstallments}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatTransactionDate(installment.transaction_date)}
-                  </p>
+            {orderedInstallments.map((installment) => {
+              const invoice = invoicesById.get(installment.invoice_id ?? "");
+              const isPaid = invoice?.status === "paid";
+              const referenceDate = isPaid
+                ? (invoice?.paid_at?.slice(0, 10) ?? invoice?.due_date ?? installment.transaction_date)
+                : (invoice?.due_date ?? installment.transaction_date);
+
+              return (
+                <div
+                  key={installment.id}
+                  className="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">
+                        Parcela {installment.installment_number ?? "—"}/{installment.total_installments ?? totalInstallments}
+                      </p>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                          isPaid
+                            ? "bg-positive/10 text-positive"
+                            : "bg-warning/10 text-warning",
+                        )}
+                      >
+                        {isPaid ? "Paga" : "Em aberto"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isPaid ? "Paga em" : "Vence em"} {formatTransactionDate(referenceDate)}
+                    </p>
+                  </div>
+                  <MoneyDisplay value={-Number(installment.amount)} signed className="shrink-0 font-semibold text-negative" />
                 </div>
-                <MoneyDisplay value={-Number(installment.amount)} signed className={cn("shrink-0 font-semibold text-negative")} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : null}
