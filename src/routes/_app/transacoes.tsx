@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
+import { InstallmentPurchaseItem } from "@/components/app/InstallmentPurchaseItem";
 import { PageHeader } from "@/components/app/PageHeader";
 import { CardExpenseDialog, type CardPurchaseDraft } from "@/components/app/CardExpenseDialog";
 import { TransactionFormDialog } from "@/components/app/TransactionFormDialog";
@@ -90,6 +91,34 @@ function calculateFilteredResult(transactions: FinancialTransaction[]) {
     },
     { income: 0, expense: 0 },
   );
+}
+
+type TransactionDisplayItem =
+  | { kind: "transaction"; transaction: FinancialTransaction }
+  | { kind: "installment_purchase"; installments: FinancialTransaction[] };
+
+function displayTransactions(
+  filteredTransactions: FinancialTransaction[],
+  allTransactions: FinancialTransaction[],
+): TransactionDisplayItem[] {
+  const displayedGroups = new Set<string>();
+
+  return filteredTransactions.flatMap((transaction) => {
+    const groupId = transaction.installment_group_id;
+    const isInstallmentPurchase = Boolean(groupId && (transaction.total_installments ?? 1) > 1);
+    if (!isInstallmentPurchase || !groupId) {
+      return [{ kind: "transaction" as const, transaction }];
+    }
+    if (displayedGroups.has(groupId)) return [];
+    displayedGroups.add(groupId);
+
+    const installments = allTransactions.filter(
+      (item) => item.installment_group_id === groupId,
+    );
+    return installments.length > 1
+      ? [{ kind: "installment_purchase" as const, installments }]
+      : [{ kind: "transaction" as const, transaction }];
+  });
 }
 
 function toCardPurchaseDraft(
@@ -234,6 +263,7 @@ function TransactionsPage() {
 
     return searchableText.includes(normalizedQuery);
   });
+  const renderedTransactions = displayTransactions(filteredTransactions, transactionList);
   const summary = calculateMonthlySummary(transactionList);
   const filteredSummary = calculateFilteredResult(filteredTransactions);
   const activeAccounts = (accounts.data ?? []).filter((account) => !account.is_archived);
@@ -298,17 +328,31 @@ function TransactionsPage() {
   const cancelCardPurchase = async () => {
     if (!cardPurchaseTarget) return;
     try {
-      await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
-      toast.success(
-        (cardPurchaseTarget.total_installments ?? 1) > 1
-          ? "Compra parcelada cancelada. Todas as parcelas foram removidas."
-          : "Compra no cartão cancelada.",
-      );
+      const cancelledInstallments = await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
+      if (cancelledInstallments === 0) {
+        toast("Nenhuma parcela foi removida porque esta compra já está totalmente paga.");
+      } else if ((cardPurchaseTarget.total_installments ?? 1) > cancelledInstallments) {
+        toast.success(
+          `${cancelledInstallments} parcela(s) em aberto foram canceladas. As já pagas ficaram no histórico.`,
+        );
+      } else {
+        toast.success(
+          cancelledInstallments > 1
+            ? "Compra parcelada cancelada. Todas as parcelas foram removidas."
+            : "Compra no cartão cancelada.",
+        );
+      }
       setCardPurchaseTarget(null);
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error && "message" in error
+            ? String(error.message)
+            : "";
       toast.error(
-        error instanceof Error && error.message.includes("has been paid")
-          ? "Não é possível cancelar: uma das faturas desta compra já foi paga."
+        message.includes("Credit card purchase not found")
+          ? "Esta compra não está mais disponível para cancelamento."
           : "Não foi possível cancelar a compra no cartão.",
       );
     }
@@ -530,6 +574,9 @@ function TransactionsPage() {
               {filteredTransactions.length === 1
                 ? "movimentação encontrada"
                 : "movimentações encontradas"}
+              {renderedTransactions.length !== filteredTransactions.length
+                ? ` em ${renderedTransactions.length} compras e movimentações`
+                : ""}
             </p>
             <p className="flex items-center gap-1">
               Resultado confirmado:
@@ -539,35 +586,53 @@ function TransactionsPage() {
 
           {filteredTransactions.length ? (
             <div>
-              {filteredTransactions.map((transaction) => (
-                <TransactionItem
-                  key={transaction.id}
-                  transaction={transaction}
-                  accountName={
-                    transaction.account_id ? accountMap.get(transaction.account_id) : undefined
-                  }
-                  destinationAccountName={
-                    transaction.destination_account_id
-                      ? accountMap.get(transaction.destination_account_id)
-                      : undefined
-                  }
-                  categoryName={
-                    transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
-                  }
-                  cardName={
-                    transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
-                  }
-                  debitCardName={
-                    transaction.debit_card_id
-                      ? debitCardMap.get(transaction.debit_card_id)
-                      : undefined
-                  }
-                  onEdit={openEdit}
-                  onDelete={setDeleteTarget}
-                  onCancelCardPurchase={setCardPurchaseTarget}
-                  onEditCardPurchase={openEditCardPurchase}
-                />
-              ))}
+              {renderedTransactions.map((item) => {
+                if (item.kind === "installment_purchase") {
+                  const first = item.installments[0];
+                  if (!first) return null;
+                  return (
+                    <InstallmentPurchaseItem
+                      key={first.installment_group_id}
+                      installments={item.installments}
+                      categoryName={first.category_id ? categoryMap.get(first.category_id) : undefined}
+                      cardName={first.credit_card_id ? cardMap.get(first.credit_card_id) : undefined}
+                      onCancel={setCardPurchaseTarget}
+                      onEdit={openEditCardPurchase}
+                    />
+                  );
+                }
+
+                const transaction = item.transaction;
+                return (
+                  <TransactionItem
+                    key={transaction.id}
+                    transaction={transaction}
+                    accountName={
+                      transaction.account_id ? accountMap.get(transaction.account_id) : undefined
+                    }
+                    destinationAccountName={
+                      transaction.destination_account_id
+                        ? accountMap.get(transaction.destination_account_id)
+                        : undefined
+                    }
+                    categoryName={
+                      transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
+                    }
+                    cardName={
+                      transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
+                    }
+                    debitCardName={
+                      transaction.debit_card_id
+                        ? debitCardMap.get(transaction.debit_card_id)
+                        : undefined
+                    }
+                    onEdit={openEdit}
+                    onDelete={setDeleteTarget}
+                    onCancelCardPurchase={setCardPurchaseTarget}
+                    onEditCardPurchase={openEditCardPurchase}
+                  />
+                );
+              })}
             </div>
           ) : (
             <EmptyState
@@ -640,9 +705,9 @@ function TransactionsPage() {
             <AlertDialogTitle>Cancelar esta compra no cartão?</AlertDialogTitle>
             <AlertDialogDescription>
               {(cardPurchaseTarget?.total_installments ?? 1) > 1
-                ? `Todas as ${cardPurchaseTarget?.total_installments} parcelas serão removidas, e o limite será recalculado.`
-                : "A compra será removida, e o limite será recalculado."}
-              {" Esta ação não poderá ser desfeita."}
+                ? `As parcelas em aberto desta compra de ${cardPurchaseTarget?.total_installments}x serão removidas e o limite será recalculado.`
+                : "A compra em aberto será removida, e o limite será recalculado."}
+              {" Se alguma parcela já estiver em uma fatura paga, ela permanecerá no histórico para não alterar um pagamento já realizado."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -145,10 +145,11 @@ export function useDeleteCreditCardPurchase() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (transactionId: string) => {
-      const { error } = await supabase.rpc("delete_credit_card_purchase", {
+      const { data, error } = await supabase.rpc("delete_credit_card_purchase", {
         p_transaction_id: transactionId,
       });
       if (error) throw error;
+      return Number(data ?? 0);
     },
     onSuccess: () => invalidateCardFinancialData(queryClient, user?.id),
   });
