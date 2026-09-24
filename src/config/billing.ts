@@ -17,7 +17,7 @@ export const billingPlans: BillingPlan[] = [
     priceLabel: "R$ 14,90",
     cadence: "/ mês",
     detail: "Acesso completo ao Valune Pro.",
-    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_MONTHLY_CHECKOUT_URL,
+    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_MONTHLY_CHECKOUT_URL ?? "https://pay.kiwify.com.br/3TTonff",
   },
   {
     code: "pro_annual",
@@ -26,7 +26,7 @@ export const billingPlans: BillingPlan[] = [
     cadence: "/ ano",
     detail: "Acesso completo ao Valune Pro com economia de quase 2 meses.",
     badge: "Melhor valor",
-    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_ANNUAL_CHECKOUT_URL,
+    checkoutUrl: import.meta.env.VITE_KIWIFY_PRO_ANNUAL_CHECKOUT_URL ?? "https://pay.kiwify.com.br/9H4S9Xd",
   },
 ];
 
