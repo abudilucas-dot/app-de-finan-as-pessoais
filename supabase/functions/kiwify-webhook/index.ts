@@ -88,14 +88,34 @@ function asMoney(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function leafValues(value: unknown, depth = 0): Array<string | number> {
+  if (typeof value === "string" || (typeof value === "number" && Number.isFinite(value))) {
+    return [value];
+  }
+  if (depth >= 4 || !value || typeof value !== "object" || Array.isArray(value)) return [];
+
+  return Object.values(asRecord(value)).flatMap((item) => leafValues(item, depth + 1));
+}
+
+function firstValidDate(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value !== "string" || !value.trim()) continue;
+    const date = new Date(value);
+    if (!Number.isNaN(date.valueOf())) return date.toISOString();
+  }
+  return null;
+}
+
 function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
   const textCandidates = [
     at(payload, ["Subscription", "plan_name"]),
     at(payload, ["Subscription", "name"]),
     at(payload, ["Subscription", "plan", "name"]),
+    at(payload, ["Subscription", "plan"]),
     at(payload, ["subscription", "plan_name"]),
     at(payload, ["subscription", "name"]),
     at(payload, ["subscription", "plan", "name"]),
+    at(payload, ["subscription", "plan"]),
     at(payload, ["Product", "product_name"]),
     at(payload, ["Product", "name"]),
     at(payload, ["product", "product_name"]),
@@ -111,8 +131,11 @@ function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
     payload.product_name,
   ];
 
-  const details = textCandidates
-    .filter((value): value is string => typeof value === "string")
+  const details = [
+    ...textCandidates.filter((value): value is string => typeof value === "string"),
+    ...leafValues(at(payload, ["Subscription", "plan"])).filter((value): value is string => typeof value === "string"),
+    ...leafValues(at(payload, ["subscription", "plan"])).filter((value): value is string => typeof value === "string"),
+  ]
     .join(" ")
     .toLowerCase();
 
@@ -121,7 +144,9 @@ function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
 
   const moneyCandidates = [
     at(payload, ["Subscription", "price"]),
+    at(payload, ["Subscription", "plan"]),
     at(payload, ["subscription", "price"]),
+    at(payload, ["subscription", "plan"]),
     at(payload, ["Offer", "price"]),
     at(payload, ["offer", "price"]),
     at(payload, ["Order", "total"]),
@@ -150,6 +175,17 @@ function nextPeriod(planCode: "pro_monthly" | "pro_annual" | null): string | nul
   if (planCode === "pro_annual") next.setFullYear(next.getFullYear() + 1);
   else next.setMonth(next.getMonth() + 1);
   return next.toISOString();
+}
+
+function currentPeriodEnd(
+  payload: JsonRecord,
+  planCode: "pro_monthly" | "pro_annual" | null,
+): string | null {
+  const providerDate = firstValidDate(
+    ...leafValues(at(payload, ["Subscription", "next_payment"])),
+    ...leafValues(at(payload, ["subscription", "next_payment"])),
+  );
+  return providerDate ?? nextPeriod(planCode);
 }
 
 async function findUserIdByEmail(
@@ -297,7 +333,16 @@ Deno.serve(async (request) => {
       return json({ received: true, ignored: true });
     }
 
-    const planCode = inferPlan(payload);
+    const inferredPlanCode = inferPlan(payload);
+    const { data: currentSubscription, error: currentSubscriptionError } = await supabase
+      .from("billing_subscriptions")
+      .select("plan_code")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (currentSubscriptionError) throw currentSubscriptionError;
+
+    const planCode = inferredPlanCode ?? currentSubscription?.plan_code ?? null;
     if (!planCode && newStatus === "active") {
       console.info("Kiwify plan could not be inferred", JSON.stringify({
         topLevelKeys: Object.keys(payload).sort(),
@@ -305,6 +350,10 @@ Deno.serve(async (request) => {
         orderKeys: Object.keys(asRecord(payload.Order ?? payload.order)).sort(),
         productKeys: Object.keys(asRecord(payload.Product ?? payload.product)).sort(),
         offerKeys: Object.keys(asRecord(payload.Offer ?? payload.offer)).sort(),
+        subscriptionPlanType: typeof at(payload, ["Subscription", "plan"]),
+        subscriptionPlanKeys: Object.keys(asRecord(at(payload, ["Subscription", "plan"]))).sort(),
+        nextPaymentType: typeof at(payload, ["Subscription", "next_payment"]),
+        nextPaymentKeys: Object.keys(asRecord(at(payload, ["Subscription", "next_payment"]))).sort(),
       }));
     }
 
@@ -315,7 +364,7 @@ Deno.serve(async (request) => {
       external_subscription_id: externalSubscriptionId,
       last_provider_event_at: new Date().toISOString(),
       cancel_at_period_end: newStatus === "cancelled",
-      current_period_ends_at: newStatus === "active" ? nextPeriod(planCode) : null,
+      current_period_ends_at: newStatus === "active" ? currentPeriodEnd(payload, planCode) : null,
       updated_at: new Date().toISOString(),
     };
 
