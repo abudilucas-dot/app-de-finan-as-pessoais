@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 type JsonRecord = Record<string, unknown>;
 type SubscriptionStatus = "active" | "past_due" | "cancelled";
+type BillingPlanCode = "lifetime" | "pro_monthly" | "pro_annual";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -106,7 +107,7 @@ function firstValidDate(...values: unknown[]): string | null {
   return null;
 }
 
-function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
+function inferPlan(payload: JsonRecord): BillingPlanCode | null {
   const textCandidates = [
     at(payload, ["Subscription", "plan_name"]),
     at(payload, ["Subscription", "name"]),
@@ -139,6 +140,7 @@ function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
     .join(" ")
     .toLowerCase();
 
+  if (details.includes("vitalício") || details.includes("vitalicio") || details.includes("lifetime")) return "lifetime";
   if (details.includes("anual") || details.includes("annual")) return "pro_annual";
   if (details.includes("mensal") || details.includes("monthly")) return "pro_monthly";
 
@@ -164,13 +166,14 @@ function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
     .map(asMoney)
     .filter((value): value is number => value !== null);
 
+  if (moneyCandidates.some((value) => Math.abs(value - 49.9) < 0.01)) return "lifetime";
   if (moneyCandidates.some((value) => Math.abs(value - 149.9) < 0.01)) return "pro_annual";
   if (moneyCandidates.some((value) => Math.abs(value - 14.9) < 0.01)) return "pro_monthly";
   return null;
 }
 
-function nextPeriod(planCode: "pro_monthly" | "pro_annual" | null): string | null {
-  if (!planCode) return null;
+function nextPeriod(planCode: BillingPlanCode | null): string | null {
+  if (!planCode || planCode === "lifetime") return null;
   const next = new Date();
   if (planCode === "pro_annual") next.setFullYear(next.getFullYear() + 1);
   else next.setMonth(next.getMonth() + 1);
@@ -179,8 +182,10 @@ function nextPeriod(planCode: "pro_monthly" | "pro_annual" | null): string | nul
 
 function currentPeriodEnd(
   payload: JsonRecord,
-  planCode: "pro_monthly" | "pro_annual" | null,
+  planCode: BillingPlanCode | null,
 ): string | null {
+  if (planCode === "lifetime") return null;
+
   const providerDate = firstValidDate(
     ...leafValues(at(payload, ["Subscription", "next_payment"])),
     ...leafValues(at(payload, ["subscription", "next_payment"])),
