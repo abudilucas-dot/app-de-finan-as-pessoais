@@ -54,9 +54,17 @@ function sameText(left: string, right: string) {
 function mapStatus(eventType: string, orderStatus: string | null): SubscriptionStatus | null {
   const normalized = eventType.toLowerCase();
 
-  if (["compra_aprovada", "subscription_renewed"].includes(normalized)) return "active";
-  if (normalized === "subscription_late") return "past_due";
-  if (["subscription_canceled", "compra_reembolsada", "chargeback"].includes(normalized)) {
+  if (["compra_aprovada", "order_approved", "subscription_renewed"].includes(normalized)) {
+    return "active";
+  }
+  if (["subscription_late", "subscription_overdue"].includes(normalized)) return "past_due";
+  if ([
+    "subscription_canceled",
+    "subscription_cancelled",
+    "compra_reembolsada",
+    "order_refunded",
+    "chargeback",
+  ].includes(normalized)) {
     return "cancelled";
   }
 
