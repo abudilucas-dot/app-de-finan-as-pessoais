@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { AccountCard } from "@/components/app/AccountCard";
 import { BalanceProjection } from "@/components/app/BalanceProjection";
 import { MoneyDisplay } from "@/components/app/MoneyDisplay";
+import { InstallmentPurchaseItem } from "@/components/app/InstallmentPurchaseItem";
 import { PageHeader } from "@/components/app/PageHeader";
 import { TransactionItem } from "@/components/app/TransactionItem";
 import { EmptyState, ErrorState, LoadingState } from "@/components/app/states";
@@ -22,6 +23,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useTransactions } from "@/hooks/useTransactions";
 import { requestNewTransaction } from "@/lib/newTransaction";
 import { calculateMonthlySummary } from "@/lib/transactions";
+import type { FinancialTransaction } from "@/lib/transactions";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -35,6 +37,27 @@ function greeting() {
   if (hour < 12) return "Bom dia";
   if (hour < 18) return "Boa tarde";
   return "Boa noite";
+}
+
+type RecentMovement =
+  | { kind: "transaction"; transaction: FinancialTransaction }
+  | { kind: "installment_purchase"; installments: FinancialTransaction[] };
+
+function groupRecentMovements(transactions: FinancialTransaction[]): RecentMovement[] {
+  const shownGroups = new Set<string>();
+
+  return transactions.flatMap((transaction) => {
+    const groupId = transaction.installment_group_id;
+    const isInstallment = Boolean(groupId && (transaction.total_installments ?? 1) > 1);
+    if (!isInstallment || !groupId) return [{ kind: "transaction" as const, transaction }];
+    if (shownGroups.has(groupId)) return [];
+    shownGroups.add(groupId);
+
+    const installments = transactions.filter((item) => item.installment_group_id === groupId);
+    return installments.length > 1
+      ? [{ kind: "installment_purchase" as const, installments }]
+      : [{ kind: "transaction" as const, transaction }];
+  });
 }
 
 function DashboardPage() {
@@ -116,7 +139,8 @@ function DashboardPage() {
   );
   const transactionList = transactions.data ?? [];
   const summary = calculateMonthlySummary(transactionList);
-  const recentTransactions = transactionList.slice(0, 5);
+  const invoiceMap = new Map((invoices.data ?? []).map((invoice) => [invoice.id, invoice]));
+  const recentMovements = groupRecentMovements(transactionList).slice(0, 5);
   const firstName = profile?.full_name?.trim().split(/\s+/)[0];
   const priorityNotifications = notifications.slice(0, 3);
 
@@ -252,39 +276,56 @@ function DashboardPage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold tracking-tight">Últimas movimentações</h2>
-          {recentTransactions.length ? (
+          {recentMovements.length ? (
             <Link to="/transacoes" className="text-sm font-medium text-primary hover:underline">
               Ver todas
             </Link>
           ) : null}
         </div>
-        {recentTransactions.length ? (
+        {recentMovements.length ? (
           <div className="surface px-4 sm:px-6">
-            {recentTransactions.map((transaction) => (
-              <TransactionItem
-                key={transaction.id}
-                transaction={transaction}
-                accountName={
-                  transaction.account_id ? accountMap.get(transaction.account_id) : undefined
-                }
-                destinationAccountName={
-                  transaction.destination_account_id
-                    ? accountMap.get(transaction.destination_account_id)
-                    : undefined
-                }
-                categoryName={
-                  transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
-                }
-                cardName={
-                  transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
-                }
-                debitCardName={
-                  transaction.debit_card_id
-                    ? debitCardMap.get(transaction.debit_card_id)
-                    : undefined
-                }
-              />
-            ))}
+            {recentMovements.map((item) => {
+              if (item.kind === "installment_purchase") {
+                const first = item.installments[0];
+                if (!first) return null;
+                return (
+                  <InstallmentPurchaseItem
+                    key={first.installment_group_id}
+                    installments={item.installments}
+                    invoicesById={invoiceMap}
+                    categoryName={first.category_id ? categoryMap.get(first.category_id) : undefined}
+                    cardName={first.credit_card_id ? cardMap.get(first.credit_card_id) : undefined}
+                  />
+                );
+              }
+
+              const transaction = item.transaction;
+              return (
+                <TransactionItem
+                  key={transaction.id}
+                  transaction={transaction}
+                  accountName={
+                    transaction.account_id ? accountMap.get(transaction.account_id) : undefined
+                  }
+                  destinationAccountName={
+                    transaction.destination_account_id
+                      ? accountMap.get(transaction.destination_account_id)
+                      : undefined
+                  }
+                  categoryName={
+                    transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
+                  }
+                  cardName={
+                    transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
+                  }
+                  debitCardName={
+                    transaction.debit_card_id
+                      ? debitCardMap.get(transaction.debit_card_id)
+                      : undefined
+                  }
+                />
+              );
+            })}            ))}
           </div>
         ) : (
           <EmptyState
