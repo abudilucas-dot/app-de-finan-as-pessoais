@@ -33,6 +33,7 @@ import { brand } from "@/config/brand";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useCategories } from "@/hooks/useCategories";
 import {
+  useCreditCardInvoices,
   useCreditCards,
   useDeleteCreditCardPayment,
   useDeleteCreditCardPurchase,
@@ -154,6 +155,7 @@ function TransactionsPage() {
   const accounts = useAccounts();
   const categories = useCategories();
   const cards = useCreditCards();
+  const invoices = useCreditCardInvoices();
   const debitCards = useDebitCards();
   const deleteTransaction = useDeleteTransaction();
   const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
@@ -199,12 +201,17 @@ function TransactionsPage() {
     () => new Map((debitCards.data ?? []).map((card) => [card.id, card.name])),
     [debitCards.data],
   );
+  const invoiceMap = useMemo(
+    () => new Map((invoices.data ?? []).map((invoice) => [invoice.id, invoice])),
+    [invoices.data],
+  );
 
   if (
     transactions.isLoading ||
     accounts.isLoading ||
     categories.isLoading ||
     cards.isLoading ||
+    invoices.isLoading ||
     debitCards.isLoading
   ) {
     return <LoadingState label="Carregando suas movimentações..." />;
@@ -214,6 +221,7 @@ function TransactionsPage() {
     accounts.isError ||
     categories.isError ||
     cards.isError ||
+    invoices.isError ||
     debitCards.isError
   ) {
     return (
@@ -223,6 +231,7 @@ function TransactionsPage() {
           accounts.refetch();
           categories.refetch();
           cards.refetch();
+          invoices.refetch();
           debitCards.refetch();
         }}
       />
@@ -611,6 +620,7 @@ function TransactionsPage() {
                     <InstallmentPurchaseItem
                       key={first.installment_group_id}
                       installments={item.installments}
+                      invoicesById={invoiceMap}
                       categoryName={first.category_id ? categoryMap.get(first.category_id) : undefined}
                       cardName={first.credit_card_id ? cardMap.get(first.credit_card_id) : undefined}
                       onCancel={setCardPurchaseTarget}
