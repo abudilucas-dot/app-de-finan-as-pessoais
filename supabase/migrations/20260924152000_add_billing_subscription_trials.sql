@@ -46,3 +46,8 @@ $$;
 create trigger on_profile_created_billing_subscription
 after insert on public.profiles
 for each row execute function public.create_billing_subscription_for_profile();
+
+
+revoke execute on function public.create_billing_subscription_for_profile() from public;
+revoke execute on function public.create_billing_subscription_for_profile() from anon;
+revoke execute on function public.create_billing_subscription_for_profile() from authenticated;
