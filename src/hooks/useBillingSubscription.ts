@@ -28,7 +28,17 @@ export function useBillingSubscription() {
         .maybeSingle();
 
       if (error) throw error;
-      return data as BillingSubscription | null;
+
+      const subscription = data as BillingSubscription | null;
+
+      if (
+        subscription?.status === "trialing" &&
+        new Date(subscription.trial_ends_at).getTime() <= Date.now()
+      ) {
+        return { ...subscription, status: "expired" };
+      }
+
+      return subscription;
     },
   });
 }
