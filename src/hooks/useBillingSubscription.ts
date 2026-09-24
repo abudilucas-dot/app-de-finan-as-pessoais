@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type BillingSubscription = {
   user_id: string;
   provider: "internal" | "kiwify";
-  plan_code: "pro_monthly" | "pro_annual" | null;
+  plan_code: "lifetime" | "pro_monthly" | "pro_annual" | null;
   status: "beta" | "trialing" | "active" | "past_due" | "cancelled" | "expired";
   trial_started_at: string;
   trial_ends_at: string;
