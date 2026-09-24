@@ -74,20 +74,73 @@ function mapStatus(eventType: string, orderStatus: string | null): SubscriptionS
   return null;
 }
 
+function asMoney(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[^0-9,.-]/g, "");
+  if (!cleaned) return null;
+
+  const normalized = cleaned.includes(",")
+    ? cleaned.replace(/\./g, "").replace(",", ".")
+    : cleaned;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function inferPlan(payload: JsonRecord): "pro_monthly" | "pro_annual" | null {
-  const details = [
+  const textCandidates = [
     at(payload, ["Subscription", "plan_name"]),
     at(payload, ["Subscription", "name"]),
+    at(payload, ["Subscription", "plan", "name"]),
+    at(payload, ["subscription", "plan_name"]),
+    at(payload, ["subscription", "name"]),
+    at(payload, ["subscription", "plan", "name"]),
     at(payload, ["Product", "product_name"]),
+    at(payload, ["Product", "name"]),
+    at(payload, ["product", "product_name"]),
+    at(payload, ["product", "name"]),
+    at(payload, ["Offer", "name"]),
+    at(payload, ["offer", "name"]),
+    at(payload, ["Order", "offer_name"]),
+    at(payload, ["Order", "product_name"]),
+    at(payload, ["order", "offer_name"]),
+    at(payload, ["order", "product_name"]),
     payload.plan_name,
     payload.offer_name,
-  ]
+    payload.product_name,
+  ];
+
+  const details = textCandidates
     .filter((value): value is string => typeof value === "string")
     .join(" ")
     .toLowerCase();
 
   if (details.includes("anual") || details.includes("annual")) return "pro_annual";
   if (details.includes("mensal") || details.includes("monthly")) return "pro_monthly";
+
+  const moneyCandidates = [
+    at(payload, ["Subscription", "price"]),
+    at(payload, ["subscription", "price"]),
+    at(payload, ["Offer", "price"]),
+    at(payload, ["offer", "price"]),
+    at(payload, ["Order", "total"]),
+    at(payload, ["Order", "price"]),
+    at(payload, ["Order", "value"]),
+    at(payload, ["order", "total"]),
+    at(payload, ["order", "price"]),
+    at(payload, ["order", "value"]),
+    payload.order_amount,
+    payload.order_value,
+    payload.amount,
+    payload.price,
+    payload.total,
+  ]
+    .map(asMoney)
+    .filter((value): value is number => value !== null);
+
+  if (moneyCandidates.some((value) => Math.abs(value - 149.9) < 0.01)) return "pro_annual";
+  if (moneyCandidates.some((value) => Math.abs(value - 14.9) < 0.01)) return "pro_monthly";
   return null;
 }
 
@@ -183,7 +236,7 @@ Deno.serve(async (request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const { data: event, error: insertError } = await supabase
+  const { data: insertedEvent, error: insertError } = await supabase
     .from("billing_webhook_events")
     .insert({
       event_key: eventKey,
@@ -194,9 +247,24 @@ Deno.serve(async (request) => {
     .select("id")
     .single();
 
-  if (insertError?.code === "23505") return json({ received: true, duplicate: true });
-  if (insertError) {
-    console.error("Unable to register Kiwify webhook event", insertError.message);
+  let eventId = insertedEvent?.id;
+  const replayed = insertError?.code === "23505";
+
+  if (replayed) {
+    const { data: existingEvent, error: existingEventError } = await supabase
+      .from("billing_webhook_events")
+      .select("id")
+      .eq("event_key", eventKey)
+      .single();
+
+    if (existingEventError || !existingEvent) {
+      console.error("Unable to load duplicate Kiwify webhook event");
+      return json({ error: "event_registration_failed" }, 500);
+    }
+
+    eventId = existingEvent.id;
+  } else if (insertError || !eventId) {
+    console.error("Unable to register Kiwify webhook event", insertError?.message ?? "unknown_error");
     return json({ error: "event_registration_failed" }, 500);
   }
 
@@ -210,7 +278,7 @@ Deno.serve(async (request) => {
           failure_reason: !email ? "missing_customer_email" : "unsupported_event",
           processed_at: new Date().toISOString(),
         })
-        .eq("id", event.id);
+        .eq("id", eventId);
 
       return json({ received: true, ignored: true });
     }
@@ -224,7 +292,7 @@ Deno.serve(async (request) => {
           failure_reason: "no_matching_valune_user",
           processed_at: new Date().toISOString(),
         })
-        .eq("id", event.id);
+        .eq("id", eventId);
 
       return json({ received: true, ignored: true });
     }
@@ -255,11 +323,11 @@ Deno.serve(async (request) => {
         user_id: userId,
         processed_at: new Date().toISOString(),
       })
-      .eq("id", event.id);
+      .eq("id", eventId);
 
     if (eventUpdateError) throw eventUpdateError;
 
-    return json({ received: true });
+    return json({ received: true, replayed });
   } catch (error) {
     const message = error instanceof Error ? error.message.slice(0, 180) : "processing_error";
     console.error("Kiwify webhook processing failed", message);
@@ -271,7 +339,7 @@ Deno.serve(async (request) => {
         failure_reason: "processing_error",
         processed_at: new Date().toISOString(),
       })
-      .eq("id", event.id);
+      .eq("id", eventId);
 
     return json({ error: "processing_error" }, 500);
   }
