@@ -325,7 +325,7 @@ function DashboardPage() {
                   }
                 />
               );
-            })}            ))}
+            })}
           </div>
         ) : (
           <EmptyState
