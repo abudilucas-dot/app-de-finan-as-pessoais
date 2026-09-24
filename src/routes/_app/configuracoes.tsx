@@ -239,25 +239,29 @@ function SettingsPage() {
               <p className="mt-1 text-sm text-muted-foreground">Verificando seu plano...</p>
             ) : billing.data?.status === "beta" ? (
               <>
-                <p className="mt-1 text-sm text-muted-foreground">Acesso beta liberado enquanto concluímos a abertura dos planos.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Acesso beta liberado enquanto concluímos a abertura pública.</p>
                 <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">Você continuará usando todos os recursos durante o beta.</p>
               </>
             ) : billing.data?.status === "trialing" ? (
               <>
-                <p className="mt-1 text-sm text-muted-foreground">Você está no teste grátis do Valune Pro.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Você está no teste grátis do Valune.</p>
                 <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
                   Restam {Math.max(0, Math.ceil((new Date(billing.data.trial_ends_at).getTime() - Date.now()) / 86_400_000))} dias do seu teste.
                 </p>
               </>
             ) : billing.data?.status === "active" ? (
               <>
-                <p className="mt-1 text-sm text-muted-foreground">Seu Valune Pro está ativo.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {billing.data.plan_code === "lifetime" ? "Seu acesso vitalício ao Valune está ativo." : "Seu Valune Pro está ativo."}
+                </p>
                 <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
-                  {billing.data.plan_code === "pro_annual" ? "Plano anual" : "Plano mensal"}{billing.data.cancel_at_period_end ? " · Cancelamento agendado" : ""}.
+                  {billing.data.plan_code === "lifetime"
+                    ? "Acesso vitalício · sem mensalidade ou renovação."
+                    : `${billing.data.plan_code === "pro_annual" ? "Plano anual" : "Plano mensal"}${billing.data.cancel_at_period_end ? " · Cancelamento agendado" : ""}.`}
                 </p>
               </>
             ) : (
-              <p className="mt-1 text-sm text-muted-foreground">Os planos estarão disponíveis após a conclusão segura do checkout.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Seu acesso será liberado após a confirmação segura da compra.</p>
             )}
           </div>
         </div>
