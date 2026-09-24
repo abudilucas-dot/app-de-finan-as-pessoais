@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Download, Eye, LogOut, UserRound } from "lucide-react";
+import { Crown, Download, Eye, LogOut, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -17,6 +17,7 @@ import { moduleThemes } from "@/config/moduleThemes";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile, useUpdateProfile } from "@/hooks/useProfile";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
+import { useBillingSubscription } from "@/hooks/useBillingSubscription";
 import { createCsvFile, localFileDate, saveCsvFile } from "@/lib/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +33,7 @@ function SettingsPage() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const updateProfile = useUpdateProfile();
   const updateSettings = useUpdateSettings();
+  const billing = useBillingSubscription();
   const [fullName, setFullName] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -39,6 +41,7 @@ function SettingsPage() {
   const [savingBackup, setSavingBackup] = useState(false);
   const settingsTheme = moduleThemes.settings;
   const exportTheme = moduleThemes.export;
+  const billingTheme = moduleThemes.cards;
 
   useEffect(() => {
     setFullName(profile?.full_name ?? "");
@@ -221,6 +224,41 @@ function SettingsPage() {
             onCheckedChange={toggleValues}
             aria-label="Ocultar valores monetários"
           />
+        </div>
+      </section>
+
+      <section className={`surface border p-5 sm:p-6 ${billingTheme.card}`}>
+        <div className="flex items-start gap-3">
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${billingTheme.icon}`}>
+            <Crown className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className={`font-semibold ${billingTheme.text}`}>Seu acesso Valune</h2>
+            {billing.isLoading ? (
+              <p className="mt-1 text-sm text-muted-foreground">Verificando seu plano...</p>
+            ) : billing.data?.status === "beta" ? (
+              <>
+                <p className="mt-1 text-sm text-muted-foreground">Acesso beta liberado enquanto concluímos a abertura dos planos.</p>
+                <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">Você continuará usando todos os recursos durante o beta.</p>
+              </>
+            ) : billing.data?.status === "trialing" ? (
+              <>
+                <p className="mt-1 text-sm text-muted-foreground">Você está no teste grátis do Valune Pro.</p>
+                <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
+                  Restam {Math.max(0, Math.ceil((new Date(billing.data.trial_ends_at).getTime() - Date.now()) / 86_400_000))} dias do seu teste.
+                </p>
+              </>
+            ) : billing.data?.status === "active" ? (
+              <>
+                <p className="mt-1 text-sm text-muted-foreground">Seu Valune Pro está ativo.</p>
+                <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
+                  {billing.data.plan_code === "pro_annual" ? "Plano anual" : "Plano mensal"}{billing.data.cancel_at_period_end ? " · Cancelamento agendado" : ""}.
+                </p>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Os planos estarão disponíveis após a conclusão segura do checkout.</p>
+            )}
+          </div>
         </div>
       </section>
 
