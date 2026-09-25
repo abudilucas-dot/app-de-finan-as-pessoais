@@ -27,7 +27,7 @@ function TermsPage() {
     <LegalPage
       title="Termos de uso"
       description="Estes termos definem o uso do aplicativo de organização financeira pessoal."
-      updatedAt="15 de setembro de 2026"
+      updatedAt="25 de setembro de 2026"
     >
       <Section title="1. Sobre o aplicativo">
         <p>{brand.name} é uma ferramenta de organização financeira pessoal. Ele ajuda a registrar informações fornecidas por você e a visualizar saldos, gastos, metas e compromissos.</p>
@@ -52,7 +52,16 @@ function TermsPage() {
         <p>O aplicativo está em evolução. Recursos podem ser ajustados, adicionados ou removidos para melhorar segurança, clareza e funcionamento. Sempre que houver uma mudança relevante nos termos, a versão atualizada será publicada nesta página.</p>
       </Section>
 
-      <Section title="6. Encerramento da conta">
+      <Section title="6. Teste e acesso completo">
+        <p>Novas contas podem usar o Valune gratuitamente por 7 dias, sem informar cartão. Ao fim do teste, o acesso aos recursos financeiros fica bloqueado até a confirmação de uma compra.</p>
+        <p>Quando oferecido no checkout, o Valune Vitalício é uma compra única, sem mensalidade ou renovação automática. O acesso completo é liberado após a confirmação segura do pagamento e permanece enquanto o Valune estiver disponível e em operação.</p>
+      </Section>
+
+      <Section title="7. Suporte">
+        <p>Para ajuda sobre o aplicativo ou uma compra, escreva para <a className="font-medium text-primary hover:underline" href="mailto:abudilucas@gmail.com?subject=Suporte%20-%20Valune">abudilucas@gmail.com</a>. Nossa meta é responder em até 2 dias úteis.</p>
+      </Section>
+
+      <Section title="8. Encerramento da conta">
         <p>Você pode solicitar a exclusão definitiva da conta pelo próprio aplicativo, em Configurações. Antes de excluir, exporte seus dados se quiser guardar uma cópia.</p>
       </Section>
     </LegalPage>
