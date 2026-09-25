@@ -252,12 +252,10 @@ function SettingsPage() {
             ) : billing.data?.status === "active" ? (
               <>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {billing.data.plan_code === "lifetime" ? "Seu acesso vitalício ao Valune está ativo." : "Seu Valune Pro está ativo."}
+                  Seu acesso completo ao Valune está desbloqueado.
                 </p>
                 <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
-                  {billing.data.plan_code === "lifetime"
-                    ? "Acesso vitalício · sem mensalidade ou renovação."
-                    : `${billing.data.plan_code === "pro_annual" ? "Plano anual" : "Plano mensal"}${billing.data.cancel_at_period_end ? " · Cancelamento agendado" : ""}.`}
+                  Todos os recursos estão liberados para você.
                 </p>
               </>
             ) : (
