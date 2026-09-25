@@ -27,7 +27,7 @@ function PrivacyPage() {
     <LegalPage
       title="Política de privacidade"
       description="Esta política explica, em linguagem simples, quais dados o aplicativo usa para funcionar e quais controles você tem sobre eles."
-      updatedAt="16 de setembro de 2026"
+      updatedAt="25 de setembro de 2026"
     >
       <Section title="1. Dados usados pelo aplicativo">
         <p>Usamos os dados que você informa para criar e acessar a conta, como nome e e-mail. Para fornecer o serviço, também guardamos os dados financeiros que você registra, por exemplo contas, cartões, movimentações, metas, orçamentos, dívidas e preferências.</p>
@@ -55,7 +55,7 @@ function PrivacyPage() {
 
       <Section title="6. Atualizações e contato">
         <p>Esta política poderá ser atualizada quando o aplicativo mudar. A data da última atualização ficará no topo desta página.</p>
-        <p>Para dúvidas ou solicitações relacionadas à privacidade, escreva para <a className="font-medium text-primary hover:underline" href="mailto:abudilucas@gmail.com?subject=Privacidade%20-%20Valune">abudilucas@gmail.com</a> ou fale pelo <a className="font-medium text-primary hover:underline" href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20sobre%20privacidade%20no%20aplicativo%20Valune." target="_blank" rel="noreferrer">WhatsApp</a>.</p>
+        <p>Para dúvidas ou solicitações relacionadas à privacidade, escreva para <a className="font-medium text-primary hover:underline" href="mailto:abudilucas@gmail.com?subject=Privacidade%20-%20Valune">abudilucas@gmail.com</a> ou fale pelo <a className="font-medium text-primary hover:underline" href="https://wa.me/5544991298462?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20sobre%20privacidade%20no%20aplicativo%20Valune." target="_blank" rel="noreferrer">WhatsApp</a>. Nossa meta é responder em até 2 dias úteis.</p>
       </Section>
     </LegalPage>
   );
