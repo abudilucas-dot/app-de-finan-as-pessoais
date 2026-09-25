@@ -10,6 +10,10 @@ export type BillingPlan = {
   checkoutUrl: string | undefined;
 };
 
+const lifetimeCheckoutUrl =
+  import.meta.env.VITE_KIWIFY_LIFETIME_CHECKOUT_URL ??
+  "https://pay.kiwify.com.br/Hda69Hf";
+
 export const billingPlans: BillingPlan[] = [
   {
     code: "lifetime",
@@ -18,7 +22,7 @@ export const billingPlans: BillingPlan[] = [
     cadence: " pagamento único",
     detail: "Acesso completo ao Valune, sem mensalidade ou renovação.",
     badge: "Oferta de lançamento",
-    checkoutUrl: import.meta.env.VITE_KIWIFY_LIFETIME_CHECKOUT_URL,
+    checkoutUrl: lifetimeCheckoutUrl,
   },
 ];
 
