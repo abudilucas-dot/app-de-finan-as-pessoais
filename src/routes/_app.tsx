@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { AppHeader } from "@/components/app/AppHeader";
 import { AppSidebar } from "@/components/app/AppSidebar";
+import { BillingAccessGate } from "@/components/app/BillingAccessGate";
 import { MobileNavigation } from "@/components/app/MobileNavigation";
 import { LoadingState } from "@/components/app/states";
 import { useTheme } from "@/components/theme-provider";
@@ -45,15 +46,17 @@ function PrivateAppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AppSidebar />
-      <div className="min-w-0 flex-1">
-        <AppHeader />
-        <main className="mx-auto w-full max-w-[1440px] px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:px-8 lg:pb-8">
-          <Outlet />
-        </main>
+    <BillingAccessGate>
+      <div className="flex min-h-screen bg-background">
+        <AppSidebar />
+        <div className="min-w-0 flex-1">
+          <AppHeader />
+          <main className="mx-auto w-full max-w-[1440px] px-4 py-6 pb-24 sm:px-6 sm:py-8 lg:px-8 lg:pb-8">
+            <Outlet />
+          </main>
+        </div>
+        <MobileNavigation />
       </div>
-      <MobileNavigation />
-    </div>
+    </BillingAccessGate>
   );
 }
