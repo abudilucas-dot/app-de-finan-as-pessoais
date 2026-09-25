@@ -85,7 +85,7 @@ function HelpPage() {
       <section className={`surface border p-5 sm:p-6 ${theme.card}`}>
         <h2 className={`font-semibold ${theme.text}`}>Ainda precisa de ajuda?</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Fale conosco pelo canal que preferir. Ao enviar uma mensagem, não compartilhe senha, códigos de confirmação ou dados de cartão.
+          Fale conosco pelo canal que preferir. Nossa meta é responder em até 2 dias úteis. Ao enviar uma mensagem, não compartilhe senha, códigos de confirmação ou dados de cartão.
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <a
