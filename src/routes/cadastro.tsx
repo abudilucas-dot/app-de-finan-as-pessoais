@@ -27,9 +27,9 @@ export const Route = createFileRoute("/cadastro")({
   head: () => ({
     meta: [
       { title: `Criar conta — ${brand.name}` },
-      { name: "description", content: `Crie sua conta ${brand.name} e comece a organizar suas finanças em minutos.` },
+      { name: "description", content: `Crie sua conta ${brand.name} usando o mesmo e-mail informado no checkout.` },
       { property: "og:title", content: `Criar conta — ${brand.name}` },
-      { property: "og:description", content: `Crie sua conta ${brand.name} gratuitamente.` },
+      { property: "og:description", content: `Crie sua conta ${brand.name} para liberar seu acesso.` },
     ],
   }),
   component: SignUpPage,
@@ -166,7 +166,7 @@ function SignUpPage() {
     return (
       <AuthShell
         title="Confirme seu e-mail"
-        description={`Enviamos um link para ${email}. Depois da confirmação, o login será aberto no mesmo endereço do aplicativo.`}
+        description={`Enviamos um link para ${email}. Depois da confirmação, entre com a sua conta. Se você já comprou, o acesso será associado automaticamente a este e-mail.`}
         footer={
           <Link to="/login" className="font-medium text-primary hover:underline">
             Ir para o login
@@ -202,7 +202,7 @@ function SignUpPage() {
   return (
     <AuthShell
       title="Criar conta"
-      description="Leva menos de um minuto para começar."
+      description="Use o mesmo e-mail informado no checkout para liberar seu acesso vitalício."
       footer={
         <>
           Já tem uma conta?{" "}
