@@ -52,9 +52,9 @@ function TermsPage() {
         <p>O aplicativo está em evolução. Recursos podem ser ajustados, adicionados ou removidos para melhorar segurança, clareza e funcionamento. Sempre que houver uma mudança relevante nos termos, a versão atualizada será publicada nesta página.</p>
       </Section>
 
-      <Section title="6. Teste e acesso completo">
-        <p>Novas contas podem usar o Valune gratuitamente por 7 dias, sem informar cartão. Ao fim do teste, o acesso aos recursos financeiros fica bloqueado até a confirmação de uma compra.</p>
-        <p>Quando oferecido no checkout, o Valune Vitalício é uma compra única, sem mensalidade ou renovação automática. O acesso completo é liberado após a confirmação segura do pagamento e permanece enquanto o Valune estiver disponível e em operação.</p>
+      <Section title="6. Compra e acesso completo">
+        <p>O acesso completo ao Valune é liberado após a confirmação segura da compra no checkout. Para associar a compra à conta, use no cadastro o mesmo e-mail informado no checkout.</p>
+        <p>Quando oferecido no checkout, o Valune Vitalício é uma compra única, sem mensalidade ou renovação automática. O acesso permanece enquanto o Valune estiver disponível e em operação. As condições de garantia, devolução e pagamento são apresentadas no checkout da Kiwify.</p>
       </Section>
 
       <Section title="7. Suporte">
