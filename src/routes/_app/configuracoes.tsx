@@ -244,9 +244,9 @@ function SettingsPage() {
               </>
             ) : billing.data?.status === "trialing" ? (
               <>
-                <p className="mt-1 text-sm text-muted-foreground">Você está no teste grátis do Valune.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Seu acesso está em atualização.</p>
                 <p className="mt-3 text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300">
-                  Restam {Math.max(0, Math.ceil((new Date(billing.data.trial_ends_at).getTime() - Date.now()) / 86_400_000))} dias do seu teste.
+                  Se você já concluiu uma compra, use o mesmo e-mail informado no checkout.
                 </p>
               </>
             ) : billing.data?.status === "active" ? (
