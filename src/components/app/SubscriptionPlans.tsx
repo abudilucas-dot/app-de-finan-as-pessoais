@@ -56,7 +56,7 @@ export function SubscriptionPlans({
         );
       })}
       <p className="text-xs text-muted-foreground">
-        A compra é processada em ambiente seguro da Kiwify. Use o mesmo e-mail cadastrado no Valune para associar seu acesso.
+        A compra é processada em ambiente seguro da Kiwify. Após a compra, crie ou entre com o mesmo e-mail usado no checkout para liberar seu acesso.
       </p>
     </div>
   );
