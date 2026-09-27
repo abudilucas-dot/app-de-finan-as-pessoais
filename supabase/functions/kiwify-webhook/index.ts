@@ -324,21 +324,58 @@ Deno.serve(async (request) => {
       return json({ received: true, ignored: true });
     }
 
+    const inferredPlanCode = inferPlan(payload);
     const userId = await findUserIdByEmail(supabase, email);
+
     if (!userId) {
-      await supabase
+      const { data: pendingPurchase, error: pendingPurchaseError } = await supabase
+        .from("billing_pending_purchases")
+        .select("plan_code")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (pendingPurchaseError) throw pendingPurchaseError;
+
+      const planCode = inferredPlanCode ?? pendingPurchase?.plan_code ?? null;
+      if (!planCode && newStatus === "active") {
+        console.info("Kiwify plan could not be inferred for pending purchase", JSON.stringify({
+          topLevelKeys: Object.keys(payload).sort(),
+          productKeys: Object.keys(asRecord(payload.Product ?? payload.product)).sort(),
+          offerKeys: Object.keys(asRecord(payload.Offer ?? payload.offer)).sort(),
+        }));
+      }
+
+      const { error: pendingUpsertError } = await supabase
+        .from("billing_pending_purchases")
+        .upsert(
+          {
+            email,
+            provider: "kiwify",
+            status: newStatus,
+            plan_code: planCode,
+            external_subscription_id: externalSubscriptionId,
+            last_provider_event_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "email" },
+        );
+
+      if (pendingUpsertError) throw pendingUpsertError;
+
+      const { error: eventUpdateError } = await supabase
         .from("billing_webhook_events")
         .update({
-          processing_status: "ignored",
-          failure_reason: "no_matching_valune_user",
+          processing_status: "processed",
+          failure_reason: null,
           processed_at: new Date().toISOString(),
         })
         .eq("id", eventId);
 
-      return json({ received: true, ignored: true });
+      if (eventUpdateError) throw eventUpdateError;
+
+      return json({ received: true, pending_account_creation: true, replayed });
     }
 
-    const inferredPlanCode = inferPlan(payload);
     const { data: currentSubscription, error: currentSubscriptionError } = await supabase
       .from("billing_subscriptions")
       .select("plan_code")
