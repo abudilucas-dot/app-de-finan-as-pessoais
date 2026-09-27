@@ -19,8 +19,6 @@ export function BillingAccessGate({ children }: { children: ReactNode }) {
 
   if (hasAccess) return <>{children}</>;
 
-  const expiredTrial = billing.data?.status === "expired";
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <section className="w-full max-w-lg rounded-3xl border border-primary/25 bg-card p-6 shadow-xl sm:p-8">
@@ -28,12 +26,10 @@ export function BillingAccessGate({ children }: { children: ReactNode }) {
           <Crown className="h-6 w-6" aria-hidden="true" />
         </span>
         <h1 className="mt-5 text-2xl font-bold tracking-tight">
-          {expiredTrial ? "Seu teste gratuito terminou" : "Libere seu acesso ao Valune"}
+          Seu acesso ainda não está liberado
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {expiredTrial
-            ? "Obrigado por experimentar o Valune. Faça a compra única para continuar usando todos os recursos e manter sua organização financeira."
-            : "Conclua a compra única para liberar todos os recursos do Valune."}
+          "Conclua a compra única para liberar todos os recursos do Valune. Se você acabou de comprar, crie ou entre usando o mesmo e-mail informado no checkout."
         </p>
         <SubscriptionPlans subscription={billing.data ?? null} />
         <Button className="mt-5 w-full" variant="ghost" onClick={() => void signOut()}>
