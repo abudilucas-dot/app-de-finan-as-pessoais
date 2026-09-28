@@ -39,7 +39,8 @@ export type DebtPayment = {
   id: string;
   user_id: string;
   debt_id: string;
-  transaction_id: string;
+  transaction_id: string | null;
+  is_historical: boolean;
   account_id: string | null;
   amount: number;
   payment_date: string;

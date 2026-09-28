@@ -353,7 +353,8 @@ export type Database = {
           notes: string | null
           payment_date: string
           scheduled_due_date: string | null
-          transaction_id: string
+          transaction_id: string | null
+          is_historical: boolean
           user_id: string
         }
         Insert: {
@@ -365,7 +366,8 @@ export type Database = {
           notes?: string | null
           payment_date?: string
           scheduled_due_date?: string | null
-          transaction_id: string
+          transaction_id?: string | null
+          is_historical?: boolean
           user_id: string
         }
         Update: {
@@ -377,7 +379,8 @@ export type Database = {
           notes?: string | null
           payment_date?: string
           scheduled_due_date?: string | null
-          transaction_id?: string
+          transaction_id?: string | null
+          is_historical?: boolean
           user_id?: string
         }
         Relationships: [
@@ -1132,6 +1135,34 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      create_historical_debt_payment: {
+        Args: {
+          p_account_id: string
+          p_amount: number
+          p_debt_id: string
+          p_notes?: string
+          p_payment_date?: string
+        }
+        Returns: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          debt_id: string
+          id: string
+          notes: string | null
+          payment_date: string
+          scheduled_due_date: string | null
+          transaction_id: string | null
+          is_historical: boolean
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "debt_payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_debt_payment: {
         Args: {
           p_account_id: string
@@ -1149,7 +1180,8 @@ export type Database = {
           notes: string | null
           payment_date: string
           scheduled_due_date: string | null
-          transaction_id: string
+          transaction_id: string | null
+          is_historical: boolean
           user_id: string
         }
         SetofOptions: {
