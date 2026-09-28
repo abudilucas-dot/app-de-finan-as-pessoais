@@ -15,7 +15,7 @@ export function PageHeader({
         <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
         {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">{actions}</div> : null}
     </header>
   );
 }
