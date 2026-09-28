@@ -113,9 +113,10 @@ export function useCreateDebtPayment() {
       amount: number;
       payment_date: string;
       notes?: string | null;
+      is_historical?: boolean;
     }) => {
       if (!user) throw new Error("Sessão não encontrada");
-      const { data, error } = await supabase.rpc("create_debt_payment", {
+      const { data, error } = await supabase.rpc(values.is_historical ? "create_historical_debt_payment" : "create_debt_payment", {
         p_debt_id: values.debt_id,
         p_account_id: values.account_id,
         p_amount: values.amount,
