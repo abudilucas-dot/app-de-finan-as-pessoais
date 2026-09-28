@@ -267,7 +267,7 @@ function CalendarPage() {
                   ].join(" ")}
                   aria-label={`${format(day, "d 'de' MMMM", { locale: ptBR })}: ${occurrences.length ? `${occurrences.length} programação(ões)` : "nenhuma programação"}`}
                 >
-                  <span className={[\"grid size-6 place-items-center rounded-full text-xs font-semibold sm:size-7 sm:text-sm\", isToday ? "bg-primary text-primary-foreground" : ""].join(" ")}>
+                  <span className={["grid size-6 place-items-center rounded-full text-xs font-semibold sm:size-7 sm:text-sm", isToday ? "bg-primary text-primary-foreground" : ""].join(" ")}>
                     {format(day, "d")}
                   </span>
 
