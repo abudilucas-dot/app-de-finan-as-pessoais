@@ -48,6 +48,14 @@ function SettingsPage() {
     setFullName(profile?.full_name ?? "");
   }, [profile?.full_name]);
 
+  useEffect(() => {
+    if (profileLoading || settingsLoading || window.location.hash !== "#exportar-dados") return;
+    const timeout = window.setTimeout(() => {
+      document.getElementById("exportar-dados")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [profileLoading, settingsLoading]);
+
   if (profileLoading || settingsLoading)
     return <LoadingState label="Carregando configurações..." />;
 
@@ -266,7 +274,7 @@ function SettingsPage() {
         <SubscriptionPlans subscription={billing.data ?? null} />
       </section>
 
-      <section className={`surface border p-5 sm:p-6 ${exportTheme.card}`}>
+      <section id="exportar-dados" tabIndex={-1} className={`surface border p-5 scroll-mt-6 sm:p-6 ${exportTheme.card}`}>
         <div className="flex items-start gap-3">
           <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${exportTheme.icon}`}><Download className="h-5 w-5" aria-hidden="true" /></span>
           <div>
@@ -274,32 +282,35 @@ function SettingsPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Baixe um relatório visual e organizado das suas contas, cartões, movimentações, metas, dívidas, orçamentos, recorrências e preferências.
             </p>
-            {preparedBackup ? (
-              <div className="mt-4 space-y-3">
-                <p className="text-sm font-medium text-foreground">
-                  Relatório pronto: {preparedBackup.name}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Toque para abrir as opções do seu dispositivo e escolha “Salvar em Arquivos”.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button className={exportTheme.primary} onClick={savePreparedBackup} disabled={savingBackup}>
-                    <Download aria-hidden="true" />
-                    {savingBackup ? "Abrindo opções..." : "Salvar em Arquivos ou compartilhar"}
-                  </Button>
-                  <Button variant="ghost" onClick={() => setPreparedBackup(null)} disabled={savingBackup}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button className={`mt-4 border-teal-500/45 ${exportTheme.text} hover:bg-teal-500/15`} variant="outline" onClick={exportData} disabled={exporting}>
-                <Download aria-hidden="true" />
-                {exporting ? "Preparando arquivo..." : "Preparar relatório financeiro"}
-              </Button>
-            )}
           </div>
         </div>
+        {preparedBackup ? (
+          <div className="mt-5 rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-center">
+            <p className="text-sm font-medium text-foreground">
+              Relatório pronto: {preparedBackup.name}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Toque no botão abaixo e escolha “Salvar em Arquivos”.
+            </p>
+            <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+              <Button className={`w-full sm:w-auto ${exportTheme.primary}`} onClick={savePreparedBackup} disabled={savingBackup}>
+                <Download aria-hidden="true" />
+                {savingBackup ? "Abrindo opções..." : "Salvar em Arquivos ou compartilhar"}
+              </Button>
+              <Button variant="ghost" onClick={() => setPreparedBackup(null)} disabled={savingBackup}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-col items-center rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-center">
+            <p className="text-sm font-medium">Para exportar, toque no botão abaixo.</p>
+            <Button className={`mt-3 w-full border-teal-500/45 ${exportTheme.text} hover:bg-teal-500/15 sm:w-auto`} variant="outline" onClick={exportData} disabled={exporting}>
+              <Download aria-hidden="true" />
+              {exporting ? "Preparando arquivo..." : "Preparar relatório financeiro"}
+            </Button>
+          </div>
+        )}
       </section>
 
       <ResetFinancialDataSection />

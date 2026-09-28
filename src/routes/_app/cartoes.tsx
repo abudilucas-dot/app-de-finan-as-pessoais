@@ -315,7 +315,7 @@ function CreditCardsPage() {
               }}
             >
               <Plus aria-hidden="true" />
-              Novo crédito
+              Novo cartão de crédito
             </Button>
             <Button
               variant="outline"
@@ -326,7 +326,7 @@ function CreditCardsPage() {
               disabled={(accounts.data ?? []).every((account) => account.is_archived)}
             >
               <Plus aria-hidden="true" />
-              Novo débito
+              Cadastrar cartão de débito
             </Button>
           </>
         }
