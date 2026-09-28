@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,7 @@ export function DebtPaymentDialog({
   const [date, setDate] = useState(todayDate());
   const [accountId, setAccountId] = useState("");
   const [notes, setNotes] = useState("");
+  const [isHistorical, setIsHistorical] = useState(false);
 
   const activeAccounts = accounts.filter((account) => !account.is_archived);
 
@@ -37,6 +39,7 @@ export function DebtPaymentDialog({
     setDate(todayDate());
     setAccountId(activeAccounts[0]?.id ?? "");
     setNotes("");
+    setIsHistorical(false);
   }, [open, debt?.id]);
 
   const submit = async (event: FormEvent) => {
@@ -46,6 +49,7 @@ export function DebtPaymentDialog({
     if (value <= 0) return toast.error("Informe um pagamento maior que zero.");
     if (value > Number(debt.remaining_amount)) return toast.error("O pagamento não pode ser maior que o saldo da dívida.");
     if (!accountId) return toast.error("Selecione a conta usada para o pagamento.");
+    if (isHistorical && (!date || date >= todayDate())) return toast.error("O pagamento histórico precisa ter uma data anterior a hoje.");
 
     try {
       await createPayment.mutateAsync({
@@ -54,8 +58,9 @@ export function DebtPaymentDialog({
         amount: value,
         payment_date: date,
         notes: notes.trim() || null,
+        is_historical: isHistorical,
       });
-      toast.success("Pagamento registrado e lançado como despesa.");
+      toast.success(isHistorical ? "Parcela registrada no histórico sem alterar o saldo." : "Pagamento registrado e lançado como despesa.");
       onOpenChange(false);
     } catch (error) {
       const message = error instanceof Error && error.message ? error.message : "Não foi possível registrar o pagamento.";
@@ -68,7 +73,7 @@ export function DebtPaymentDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Registrar pagamento</DialogTitle>
-          <DialogDescription>{debt ? `O pagamento será lançado como despesa e reduzirá “${debt.name}”.` : "Registre um pagamento."}</DialogDescription>
+          <DialogDescription>{debt ? `Registre um pagamento de “${debt.name}” e escolha como ele afeta sua conta.` : "Registre um pagamento."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-5" onSubmit={submit}>
           <div className="space-y-2">
@@ -90,6 +95,13 @@ export function DebtPaymentDialog({
           <div className="space-y-2">
             <Label htmlFor="debt-payment-date">Data</Label>
             <Input id="debt-payment-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          </div>
+          <div className="flex items-start gap-3 rounded-lg border p-3">
+            <Checkbox id="debt-payment-historical" checked={isHistorical} onCheckedChange={(checked) => setIsHistorical(checked === true)} />
+            <div className="space-y-1">
+              <Label htmlFor="debt-payment-historical" className="cursor-pointer">Já paguei antes de começar meu controle no Valune</Label>
+              <p className="text-xs text-muted-foreground">A parcela fica como paga na dívida, sem gerar despesa nem alterar o saldo informado ao criar a conta. Use apenas se esse pagamento já estava incluído no saldo inicial.</p>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="debt-payment-notes">Observação (opcional)</Label>
