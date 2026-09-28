@@ -27,11 +27,11 @@ export function DebtCard({
   const progress = debtProgress({ initial_amount: initial, remaining_amount: remaining });
   const isPaid = debt.status === "paid";
 
-  const removePayment = async (id: string) => {
-    if (!window.confirm("Remover este pagamento? O lançamento de despesa correspondente também será enviado para a lixeira.")) return;
+  const removePayment = async (id: string, isHistorical: boolean) => {
+    if (!window.confirm(isHistorical ? "Remover este pagamento histórico da dívida?" : "Remover este pagamento? O lançamento de despesa correspondente também será enviado para a lixeira.")) return;
     try {
       await deletePayment.mutateAsync(id);
-      toast.success("Pagamento removido e lançamento enviado para a lixeira.");
+      toast.success(isHistorical ? "Pagamento histórico removido." : "Pagamento removido e lançamento enviado para a lixeira.");
     } catch {
       toast.error("Não foi possível remover o pagamento.");
     }
@@ -83,9 +83,9 @@ export function DebtCard({
             <li key={payment.id} className="flex items-center justify-between gap-3 py-2.5">
               <div className="min-w-0 text-sm">
                 <p className="font-medium"><MoneyDisplay value={payment.amount} /></p>
-                <p className="truncate text-xs text-muted-foreground">{formatDebtDate(payment.payment_date)}{payment.account_id ? " · " + (accountNames.get(payment.account_id) ?? "Conta") : ""}{payment.notes ? " · " + payment.notes : ""}</p>
+                <p className="truncate text-xs text-muted-foreground">{formatDebtDate(payment.payment_date)}{payment.account_id ? " · " + (accountNames.get(payment.account_id) ?? "Conta") : ""}{payment.is_historical ? " · Já pago antes do saldo inicial" : ""}{payment.notes ? " · " + payment.notes : ""}</p>
               </div>
-              <Button variant="ghost" size="icon" aria-label="Remover pagamento" className="h-8 w-8" disabled={deletePayment.isPending} onClick={() => removePayment(payment.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" aria-label="Remover pagamento" className="h-8 w-8" disabled={deletePayment.isPending} onClick={() => removePayment(payment.id, payment.is_historical)}><Trash2 className="h-4 w-4" /></Button>
             </li>
           ))}
         </ul>
