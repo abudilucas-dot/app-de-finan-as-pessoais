@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Crown, Download, Eye, LogOut, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { DeleteAccountSection } from "@/components/app/DeleteAccountSection";
@@ -52,12 +52,20 @@ function SettingsPage() {
     setFullName(profile?.full_name ?? "");
   }, [profile?.full_name]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (profileLoading || settingsLoading || !focusExport) return;
-    const animationFrame = window.requestAnimationFrame(() => {
+
+    const scrollToExport = () => {
       document.getElementById("exportar-dados")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-    return () => window.cancelAnimationFrame(animationFrame);
+    };
+
+    scrollToExport();
+    const afterNavigation = window.setTimeout(scrollToExport, 180);
+    const afterRestore = window.setTimeout(scrollToExport, 450);
+    return () => {
+      window.clearTimeout(afterNavigation);
+      window.clearTimeout(afterRestore);
+    };
   }, [focusExport, profileLoading, settingsLoading]);
 
   if (profileLoading || settingsLoading)
