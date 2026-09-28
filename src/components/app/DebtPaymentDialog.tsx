@@ -57,8 +57,9 @@ export function DebtPaymentDialog({
       });
       toast.success("Pagamento registrado e lançado como despesa.");
       onOpenChange(false);
-    } catch {
-      toast.error("Não foi possível registrar o pagamento.");
+    } catch (error) {
+      const message = error instanceof Error && error.message ? error.message : "Não foi possível registrar o pagamento.";
+      toast.error(message);
     }
   };
 
