@@ -23,12 +23,16 @@ import { createCsvFile, localFileDate, saveCsvFile } from "@/lib/csvExport";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app/configuracoes")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    focusExport: search.focusExport === true || search.focusExport === "true",
+  }),
   head: () => ({ meta: [{ title: `Configurações — ${brand.name}` }] }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
   const navigate = useNavigate();
+  const { focusExport } = Route.useSearch();
   const { user, signOut } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: settings, isLoading: settingsLoading } = useSettings();
@@ -49,12 +53,12 @@ function SettingsPage() {
   }, [profile?.full_name]);
 
   useEffect(() => {
-    if (profileLoading || settingsLoading || window.location.hash !== "#exportar-dados") return;
-    const timeout = window.setTimeout(() => {
+    if (profileLoading || settingsLoading || !focusExport) return;
+    const animationFrame = window.requestAnimationFrame(() => {
       document.getElementById("exportar-dados")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [profileLoading, settingsLoading]);
+    });
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [focusExport, profileLoading, settingsLoading]);
 
   if (profileLoading || settingsLoading)
     return <LoadingState label="Carregando configurações..." />;

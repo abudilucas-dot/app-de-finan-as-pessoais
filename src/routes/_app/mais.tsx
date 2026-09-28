@@ -26,7 +26,7 @@ const links = [
   { to: "/assinaturas", label: "Assinaturas", description: "Acompanhe serviços recorrentes", icon: Repeat2, theme: moduleThemes.subscriptions },
   { to: "/lixeira", label: "Lixeira", description: "Restaure movimentações excluídas", icon: Trash2, theme: moduleThemes.trash },
   { to: "/ajuda", label: "Ajuda e suporte", description: "Tire dúvidas sobre o aplicativo", icon: CircleHelp, theme: moduleThemes.support },
-  { to: "/configuracoes", hash: "exportar-dados", label: "Exportar dados", description: "Baixe uma cópia dos seus dados em CSV", icon: Download, theme: moduleThemes.export },
+  { to: "/configuracoes", search: { focusExport: true }, label: "Exportar dados", description: "Baixe uma cópia dos seus dados em CSV", icon: Download, theme: moduleThemes.export },
   { to: "/configuracoes", label: "Configurações", description: "Perfil, tema e privacidade", icon: Settings, theme: moduleThemes.settings },
 ] as const;
 
@@ -39,7 +39,7 @@ function MorePage() {
           <Link
             key={item.label}
             to={item.to}
-            hash={"hash" in item ? item.hash : undefined}
+            search={"search" in item ? item.search : undefined}
             className={`surface flex min-h-20 items-center gap-4 border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${item.theme.card}`}
           >
             <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.theme.icon}`}>
