@@ -1162,7 +1162,8 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
-      }      create_debt_payment: {
+      }
+      create_debt_payment: {
         Args: {
           p_account_id: string
           p_amount: number
