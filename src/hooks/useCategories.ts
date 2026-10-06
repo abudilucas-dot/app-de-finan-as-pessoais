@@ -13,6 +13,18 @@ export type Category = {
   is_default: boolean;
 };
 
+const categoryCollator = new Intl.Collator("pt-BR", { sensitivity: "base" });
+
+/** Mantém a categoria genérica como última opção, independentemente da ordenação do banco. */
+export function orderCategories(categories: Category[]) {
+  return [...categories].sort((first, second) => {
+    const firstIsOther = first.name.trim().toLocaleLowerCase("pt-BR") === "outros";
+    const secondIsOther = second.name.trim().toLocaleLowerCase("pt-BR") === "outros";
+    if (firstIsOther !== secondIsOther) return firstIsOther ? 1 : -1;
+    return categoryCollator.compare(first.name, second.name);
+  });
+}
+
 export function useCategories(type?: "income" | "expense") {
   const { user } = useAuth();
 
@@ -24,7 +36,7 @@ export function useCategories(type?: "income" | "expense") {
       if (type) query = query.eq("type", type);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as Category[];
+      return orderCategories((data ?? []) as Category[]);
     },
   });
 }
