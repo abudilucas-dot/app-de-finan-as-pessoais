@@ -14,17 +14,20 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
-import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'\nimport { Route as PrivacidadeRouteImport } from './routes/privacidade'\nimport { Route as TermosRouteImport } from './routes/termos'
-import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'\nimport { Route as AppAjudaRouteImport } from './routes/_app/ajuda'
+import { Route as RedefinirSenhaRouteImport } from './routes/redefinir-senha'
+import { Route as TermosRouteImport } from './routes/termos'
+import { Route as AppAjudaRouteImport } from './routes/_app/ajuda'
+import { Route as AppAssinaturasRouteImport } from './routes/_app/assinaturas'
 import { Route as AppCalendarioRouteImport } from './routes/_app/calendario'
 import { Route as AppCartoesRouteImport } from './routes/_app/cartoes'
 import { Route as AppConfiguracoesRouteImport } from './routes/_app/configuracoes'
 import { Route as AppContasRouteImport } from './routes/_app/contas'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDividasRouteImport } from './routes/_app/dividas'
-import { Route as AppMaisRouteImport } from './routes/_app/mais'
 import { Route as AppLixeiraRouteImport } from './routes/_app/lixeira'
+import { Route as AppMaisRouteImport } from './routes/_app/mais'
 import { Route as AppMetasRouteImport } from './routes/_app/metas'
 import { Route as AppNotificacoesRouteImport } from './routes/_app/notificacoes'
 import { Route as AppOrcamentosRouteImport } from './routes/_app/orcamentos'
@@ -55,6 +58,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
   id: '/recuperar-senha',
   path: '/recuperar-senha',
@@ -64,12 +72,22 @@ const RedefinirSenhaRoute = RedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
   getParentRoute: () => rootRouteImport,
-} as any)\nconst PrivacidadeRoute = PrivacidadeRouteImport.update({\n  id: '/privacidade',\n  path: '/privacidade',\n  getParentRoute: () => rootRouteImport,\n} as any)\nconst TermosRoute = TermosRouteImport.update({\n  id: '/termos',\n  path: '/termos',\n  getParentRoute: () => rootRouteImport,\n} as any)
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAjudaRoute = AppAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAssinaturasRoute = AppAssinaturasRouteImport.update({
   id: '/assinaturas',
   path: '/assinaturas',
   getParentRoute: () => AppRoute,
-} as any)\nconst AppAjudaRoute = AppAjudaRouteImport.update({\n  id: '/ajuda',\n  path: '/ajuda',\n  getParentRoute: () => AppRoute,\n} as any)
+} as any)
 const AppCalendarioRoute = AppCalendarioRouteImport.update({
   id: '/calendario',
   path: '/calendario',
@@ -100,14 +118,14 @@ const AppDividasRoute = AppDividasRouteImport.update({
   path: '/dividas',
   getParentRoute: () => AppRoute,
 } as any)
-const AppMaisRoute = AppMaisRouteImport.update({
-  id: '/mais',
-  path: '/mais',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppLixeiraRoute = AppLixeiraRouteImport.update({
   id: '/lixeira',
   path: '/lixeira',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMaisRoute = AppMaisRouteImport.update({
+  id: '/mais',
+  path: '/mais',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMetasRoute = AppMetasRouteImport.update({
@@ -141,8 +159,11 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/ajuda': typeof AppAjudaRoute
   '/assinaturas': typeof AppAssinaturasRoute
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
@@ -150,8 +171,8 @@ export interface FileRoutesByFullPath {
   '/contas': typeof AppContasRoute
   '/dashboard': typeof AppDashboardRoute
   '/dividas': typeof AppDividasRoute
-  '/mais': typeof AppMaisRoute
   '/lixeira': typeof AppLixeiraRoute
+  '/mais': typeof AppMaisRoute
   '/metas': typeof AppMetasRoute
   '/notificacoes': typeof AppNotificacoesRoute
   '/orcamentos': typeof AppOrcamentosRoute
@@ -163,15 +184,22 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/ajuda': typeof AppAjudaRoute
+  '/assinaturas': typeof AppAssinaturasRoute
   '/calendario': typeof AppCalendarioRoute
   '/cartoes': typeof AppCartoesRoute
   '/configuracoes': typeof AppConfiguracoesRoute
   '/contas': typeof AppContasRoute
   '/dashboard': typeof AppDashboardRoute
+  '/dividas': typeof AppDividasRoute
+  '/lixeira': typeof AppLixeiraRoute
   '/mais': typeof AppMaisRoute
   '/metas': typeof AppMetasRoute
+  '/notificacoes': typeof AppNotificacoesRoute
   '/orcamentos': typeof AppOrcamentosRoute
   '/relatorios': typeof AppRelatoriosRoute
   '/transacoes': typeof AppTransacoesRoute
@@ -183,8 +211,11 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/redefinir-senha': typeof RedefinirSenhaRoute
+  '/termos': typeof TermosRoute
+  '/_app/ajuda': typeof AppAjudaRoute
   '/_app/assinaturas': typeof AppAssinaturasRoute
   '/_app/calendario': typeof AppCalendarioRoute
   '/_app/cartoes': typeof AppCartoesRoute
@@ -192,8 +223,8 @@ export interface FileRoutesById {
   '/_app/contas': typeof AppContasRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/dividas': typeof AppDividasRoute
-  '/_app/mais': typeof AppMaisRoute
   '/_app/lixeira': typeof AppLixeiraRoute
+  '/_app/mais': typeof AppMaisRoute
   '/_app/metas': typeof AppMetasRoute
   '/_app/notificacoes': typeof AppNotificacoesRoute
   '/_app/orcamentos': typeof AppOrcamentosRoute
@@ -207,8 +238,11 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/onboarding'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
+    | '/ajuda'
     | '/assinaturas'
     | '/calendario'
     | '/cartoes'
@@ -216,8 +250,8 @@ export interface FileRouteTypes {
     | '/contas'
     | '/dashboard'
     | '/dividas'
-    | '/mais'
     | '/lixeira'
+    | '/mais'
     | '/metas'
     | '/notificacoes'
     | '/orcamentos'
@@ -229,15 +263,20 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/onboarding'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
+    | '/ajuda'
+    | '/assinaturas'
     | '/calendario'
     | '/cartoes'
     | '/configuracoes'
     | '/contas'
     | '/dashboard'
-    | '/mais'
+    | '/dividas'
     | '/lixeira'
+    | '/mais'
     | '/metas'
     | '/notificacoes'
     | '/orcamentos'
@@ -250,8 +289,11 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/onboarding'
+    | '/privacidade'
     | '/recuperar-senha'
     | '/redefinir-senha'
+    | '/termos'
+    | '/_app/ajuda'
     | '/_app/assinaturas'
     | '/_app/calendario'
     | '/_app/cartoes'
@@ -259,8 +301,10 @@ export interface FileRouteTypes {
     | '/_app/contas'
     | '/_app/dashboard'
     | '/_app/dividas'
+    | '/_app/lixeira'
     | '/_app/mais'
     | '/_app/metas'
+    | '/_app/notificacoes'
     | '/_app/orcamentos'
     | '/_app/relatorios'
     | '/_app/transacoes'
@@ -272,8 +316,10 @@ export interface RootRouteChildren {
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   RedefinirSenhaRoute: typeof RedefinirSenhaRoute
+  TermosRoute: typeof TermosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -313,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recuperar-senha': {
       id: '/recuperar-senha'
       path: '/recuperar-senha'
@@ -327,13 +380,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -341,14 +387,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/ajuda': {\n      id: '/_app/ajuda'\n      path: '/ajuda'\n      fullPath: '/ajuda'\n      preLoaderRoute: typeof AppAjudaRouteImport\n      parentRoute: typeof AppRoute\n    }\n    '/_app/assinaturas': {
-    id: '/_app/assinaturas'
-    path: '/assinaturas'
-    fullPath: '/assinaturas'
-    preLoaderRoute: typeof AppAssinaturasRouteImport
-    parentRoute: typeof AppRoute
-  }
-  '/_app/calendario': {
+    '/_app/ajuda': {
+      id: '/_app/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AppAjudaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/assinaturas': {
+      id: '/_app/assinaturas'
+      path: '/assinaturas'
+      fullPath: '/assinaturas'
+      preLoaderRoute: typeof AppAssinaturasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/calendario': {
       id: '/_app/calendario'
       path: '/calendario'
       fullPath: '/calendario'
@@ -390,18 +443,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDividasRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/mais': {
-      id: '/_app/mais'
-      path: '/mais'
-      fullPath: '/mais'
-      preLoaderRoute: typeof AppMaisRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/lixeira': {
       id: '/_app/lixeira'
       path: '/lixeira'
       fullPath: '/lixeira'
       preLoaderRoute: typeof AppLixeiraRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/mais': {
+      id: '/_app/mais'
+      path: '/mais'
+      fullPath: '/mais'
+      preLoaderRoute: typeof AppMaisRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/metas': {
@@ -443,6 +496,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAjudaRoute: typeof AppAjudaRoute
   AppAssinaturasRoute: typeof AppAssinaturasRoute
   AppCalendarioRoute: typeof AppCalendarioRoute
   AppCartoesRoute: typeof AppCartoesRoute
@@ -450,8 +504,8 @@ interface AppRouteChildren {
   AppContasRoute: typeof AppContasRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDividasRoute: typeof AppDividasRoute
-  AppMaisRoute: typeof AppMaisRoute
   AppLixeiraRoute: typeof AppLixeiraRoute
+  AppMaisRoute: typeof AppMaisRoute
   AppMetasRoute: typeof AppMetasRoute
   AppNotificacoesRoute: typeof AppNotificacoesRoute
   AppOrcamentosRoute: typeof AppOrcamentosRoute
@@ -460,6 +514,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAjudaRoute: AppAjudaRoute,
   AppAssinaturasRoute: AppAssinaturasRoute,
   AppCalendarioRoute: AppCalendarioRoute,
   AppCartoesRoute: AppCartoesRoute,
@@ -467,8 +522,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppContasRoute: AppContasRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDividasRoute: AppDividasRoute,
-  AppMaisRoute: AppMaisRoute,
   AppLixeiraRoute: AppLixeiraRoute,
+  AppMaisRoute: AppMaisRoute,
   AppMetasRoute: AppMetasRoute,
   AppNotificacoesRoute: AppNotificacoesRoute,
   AppOrcamentosRoute: AppOrcamentosRoute,
@@ -484,8 +539,10 @@ const rootRouteChildren: RootRouteChildren = {
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   RedefinirSenhaRoute: RedefinirSenhaRoute,
+  TermosRoute: TermosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

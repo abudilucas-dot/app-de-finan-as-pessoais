@@ -198,7 +198,7 @@ export function TransactionFormDialog({
                   aria-pressed={type === option.value}
                   onClick={() => changeType(option.value)}
                   className={cn(
-                    "min-h-11 rounded-lg border px-2 text-sm font-medium transition-colors",
+                    "min-h-11 min-w-0 rounded-lg border px-1 text-xs font-medium transition-colors sm:px-2 sm:text-sm",
                     type === option.value
                       ? "border-primary bg-accent text-accent-foreground"
                       : "hover:bg-muted/60",
@@ -228,8 +228,8 @@ export function TransactionFormDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-2">
               <Label htmlFor="transaction-amount">Valor</Label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -244,7 +244,7 @@ export function TransactionFormDialog({
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="min-w-0 space-y-2">
               <Label htmlFor="transaction-date">Data</Label>
               <Input
                 id="transaction-date"

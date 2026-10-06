@@ -117,9 +117,7 @@ function displayTransactions(
     if (displayedGroups.has(groupId)) return [];
     displayedGroups.add(groupId);
 
-    const installments = allTransactions.filter(
-      (item) => item.installment_group_id === groupId,
-    );
+    const installments = allTransactions.filter((item) => item.installment_group_id === groupId);
     return installments.length > 1
       ? [{ kind: "installment_purchase" as const, installments }]
       : [{ kind: "transaction" as const, transaction }];
@@ -354,7 +352,9 @@ function TransactionsPage() {
   const cancelCardPurchase = async () => {
     if (!cardPurchaseTarget) return;
     try {
-      const cancelledInstallments = await deleteCreditCardPurchase.mutateAsync(cardPurchaseTarget.id);
+      const cancelledInstallments = await deleteCreditCardPurchase.mutateAsync(
+        cardPurchaseTarget.id,
+      );
       if (cancelledInstallments === 0) {
         toast("Nenhuma parcela foi removida porque esta compra já está totalmente paga.");
       } else if ((cardPurchaseTarget.total_installments ?? 1) > cancelledInstallments) {
@@ -478,8 +478,8 @@ function TransactionsPage() {
               </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <label className="space-y-1.5 text-sm font-medium">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>De</span>
                 <Input
                   type="date"
@@ -489,7 +489,7 @@ function TransactionsPage() {
                   className="min-h-11"
                 />
               </label>
-              <label className="space-y-1.5 text-sm font-medium">
+              <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>Até</span>
                 <Input
                   type="date"
@@ -499,7 +499,7 @@ function TransactionsPage() {
                   className="min-h-11"
                 />
               </label>
-              <label className="space-y-1.5 text-sm font-medium">
+              <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>Categoria</span>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="min-h-11">
@@ -515,7 +515,7 @@ function TransactionsPage() {
                   </SelectContent>
                 </Select>
               </label>
-              <label className="space-y-1.5 text-sm font-medium">
+              <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>Status</span>
                 <Select
                   value={statusFilter}
@@ -570,7 +570,7 @@ function TransactionsPage() {
             </label>
 
             <div
-              className="flex gap-2 overflow-x-auto pb-1"
+              className="flex flex-wrap gap-2"
               role="tablist"
               aria-label="Filtrar por tipo de transação"
             >
@@ -621,8 +621,12 @@ function TransactionsPage() {
                       key={first.installment_group_id}
                       installments={item.installments}
                       invoicesById={invoiceMap}
-                      categoryName={first.category_id ? categoryMap.get(first.category_id) : undefined}
-                      cardName={first.credit_card_id ? cardMap.get(first.credit_card_id) : undefined}
+                      categoryName={
+                        first.category_id ? categoryMap.get(first.category_id) : undefined
+                      }
+                      cardName={
+                        first.credit_card_id ? cardMap.get(first.credit_card_id) : undefined
+                      }
                       onCancel={setCardPurchaseTarget}
                       onEdit={openEditCardPurchase}
                     />
@@ -646,7 +650,9 @@ function TransactionsPage() {
                       transaction.category_id ? categoryMap.get(transaction.category_id) : undefined
                     }
                     cardName={
-                      transaction.credit_card_id ? cardMap.get(transaction.credit_card_id) : undefined
+                      transaction.credit_card_id
+                        ? cardMap.get(transaction.credit_card_id)
+                        : undefined
                     }
                     debitCardName={
                       transaction.debit_card_id
@@ -732,7 +738,8 @@ function TransactionsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Desfazer este pagamento de fatura?</AlertDialogTitle>
             <AlertDialogDescription>
-              O valor voltará para a fatura em aberto e o saldo da conta usada no pagamento será recalculado. Depois disso, você poderá cancelar a compra parcelada, se desejar.
+              O valor voltará para a fatura em aberto e o saldo da conta usada no pagamento será
+              recalculado. Depois disso, você poderá cancelar a compra parcelada, se desejar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -759,7 +766,9 @@ function TransactionsPage() {
               {(cardPurchaseTarget?.total_installments ?? 1) > 1
                 ? `As parcelas em aberto desta compra de ${cardPurchaseTarget?.total_installments}x serão removidas e o limite será recalculado.`
                 : "A compra em aberto será removida, e o limite será recalculado."}
-              {" Se alguma parcela já estiver em uma fatura paga, ela permanecerá no histórico para não alterar um pagamento já realizado."}
+              {
+                " Se alguma parcela já estiver em uma fatura paga, ela permanecerá no histórico para não alterar um pagamento já realizado."
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
