@@ -191,6 +191,19 @@
     max-width: 100%;
   }
 
+  /* No Safari do iPhone, o seletor nativo de data pode manter uma largura
+     intrínseca maior que seu contêiner. Estas regras o prendem ao card/modal. */
+  input[type="date"] {
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    width: 100%;
+    min-inline-size: 0;
+    min-width: 0;
+    max-inline-size: 100%;
+    max-width: 100%;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     overflow-x: clip;
