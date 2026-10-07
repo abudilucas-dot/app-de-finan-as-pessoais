@@ -75,6 +75,37 @@ const STATUS_FILTERS: { value: "all" | TransactionStatus; label: string }[] = [
 
 type SourceFilter = "all" | `account:${string}` | `credit:${string}` | `debit:${string}`;
 
+const TRANSACTIONS_VIEW_KEY = "valune:transactions-view";
+const TRANSACTIONS_VIEW_WINDOW_MS = 20 * 60 * 1000;
+
+type SavedTransactionsView = {
+  filter: "all" | TransactionType;
+  statusFilter: "all" | TransactionStatus;
+  categoryFilter: string;
+  sourceFilter: SourceFilter;
+  query: string;
+  startDate: string;
+  endDate: string;
+  savedAt: number;
+};
+
+function readSavedTransactionsView(): SavedTransactionsView | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(TRANSACTIONS_VIEW_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as SavedTransactionsView;
+    if (Date.now() - saved.savedAt > TRANSACTIONS_VIEW_WINDOW_MS) {
+      window.localStorage.removeItem(TRANSACTIONS_VIEW_KEY);
+      return null;
+    }
+    return saved;
+  } catch {
+    return null;
+  }
+}
+
 function formatLocalDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -159,13 +190,14 @@ function TransactionsPage() {
   const deleteTransaction = useDeleteTransaction();
   const deleteCreditCardPurchase = useDeleteCreditCardPurchase();
   const deleteCreditCardPayment = useDeleteCreditCardPayment();
-  const [filter, setFilter] = useState<"all" | TransactionType>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | TransactionStatus>("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [query, setQuery] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [savedView] = useState(readSavedTransactionsView);
+  const [filter, setFilter] = useState<"all" | TransactionType>(() => savedView?.filter ?? "all");
+  const [statusFilter, setStatusFilter] = useState<"all" | TransactionStatus>(() => savedView?.statusFilter ?? "all");
+  const [categoryFilter, setCategoryFilter] = useState(() => savedView?.categoryFilter ?? "all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>(() => savedView?.sourceFilter ?? "all");
+  const [query, setQuery] = useState(() => savedView?.query ?? "");
+  const [startDate, setStartDate] = useState(() => savedView?.startDate ?? "");
+  const [endDate, setEndDate] = useState(() => savedView?.endDate ?? "");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<FinancialTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FinancialTransaction | null>(null);
@@ -183,6 +215,26 @@ function TransactionsPage() {
     window.addEventListener(newTransactionEventName, openRequestedTransaction);
     return () => window.removeEventListener(newTransactionEventName, openRequestedTransaction);
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        TRANSACTIONS_VIEW_KEY,
+        JSON.stringify({
+          filter,
+          statusFilter,
+          categoryFilter,
+          sourceFilter,
+          query,
+          startDate,
+          endDate,
+          savedAt: Date.now(),
+        } satisfies SavedTransactionsView),
+      );
+    } catch {
+      // Filtros continuam funcionando normalmente se o navegador bloquear armazenamento.
+    }
+  }, [categoryFilter, endDate, filter, query, sourceFilter, startDate, statusFilter]);
 
   const accountMap = useMemo(
     () => new Map((accounts.data ?? []).map((account) => [account.id, account.name])),

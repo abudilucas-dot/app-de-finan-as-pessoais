@@ -41,8 +41,13 @@ export function AppResumeManager() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
   const restoredPathRef = useRef<string | null>(null);
+  const restoringRef = useRef(false);
 
   const saveContext = useCallback(() => {
+    // Durante a reconstrução da tela, o iPhone inicia a página no topo. Não
+    // deixamos esse topo substituir a posição verdadeira que acabamos de salvar.
+    if (restoringRef.current) return;
+
     try {
       window.localStorage.setItem(
         RESUME_KEY,
@@ -85,27 +90,37 @@ export function AppResumeManager() {
     // (/dashboard). Retomamos a última tela recente em vez de mandar o usuário
     // de volta para o início.
     if (pathname === "/dashboard" && context.pathname.startsWith("/")) {
-      restoredPathRef.current = context.pathname;
+      restoringRef.current = true;
+      restoredPathRef.current = "__redirecting_to_saved_screen__";
       void navigate({ to: context.pathname, replace: true });
       return;
     }
 
     if (context.pathname !== pathname) return;
     restoredPathRef.current = pathname;
+    restoringRef.current = true;
 
+    // O retorno do iPhone recria a página antes de as consultas do Supabase
+    // terminarem. Reaplicamos a rolagem enquanto o conteúdo reaparece, em vez
+    // de tentar somente uma vez no loading.
     const restoreScroll = () => window.scrollTo({ top: context.scrollY, left: 0, behavior: "instant" });
-    const firstFrame = window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(restoreScroll);
-    });
-    const secondAttempt = window.setTimeout(restoreScroll, 180);
-    const finalAttempt = window.setTimeout(restoreScroll, 650);
+    restoreScroll();
+    const retry = window.setInterval(restoreScroll, 120);
+    const observer = new MutationObserver(restoreScroll);
+    observer.observe(document.body, { childList: true, subtree: true });
+    const complete = window.setTimeout(() => {
+      window.clearInterval(retry);
+      observer.disconnect();
+      restoringRef.current = false;
+      saveContext();
+    }, 5000);
 
     return () => {
-      window.cancelAnimationFrame(firstFrame);
-      window.clearTimeout(secondAttempt);
-      window.clearTimeout(finalAttempt);
+      window.clearInterval(retry);
+      observer.disconnect();
+      window.clearTimeout(complete);
     };
-  }, [navigate, pathname]);
+  }, [navigate, pathname, saveContext]);
 
   useEffect(() => {
     const restoreAfterResume = () => {
@@ -113,7 +128,16 @@ export function AppResumeManager() {
       restoredPathRef.current = null;
       const context = readResumeContext();
       if (!context || context.pathname !== pathname) return;
-      window.setTimeout(() => window.scrollTo({ top: context.scrollY, left: 0, behavior: "instant" }), 80);
+      restoringRef.current = true;
+      const restore = () => window.scrollTo({ top: context.scrollY, left: 0, behavior: "instant" });
+      restore();
+      window.setTimeout(restore, 120);
+      window.setTimeout(restore, 500);
+      window.setTimeout(() => {
+        restore();
+        restoringRef.current = false;
+        saveContext();
+      }, 1400);
     };
 
     document.addEventListener("visibilitychange", restoreAfterResume);
@@ -122,7 +146,7 @@ export function AppResumeManager() {
       document.removeEventListener("visibilitychange", restoreAfterResume);
       window.removeEventListener("pageshow", restoreAfterResume);
     };
-  }, [pathname]);
+  }, [pathname, saveContext]);
 
   return null;
 }
