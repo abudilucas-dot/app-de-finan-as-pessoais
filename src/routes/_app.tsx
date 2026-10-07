@@ -19,6 +19,7 @@ function PrivateAppLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const handledInitialOpenRef = useRef(false);
+  const lastScrollYRef = useRef(0);
   const { user, loading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: settings } = useSettings();
@@ -58,6 +59,44 @@ function PrivateAppLayout() {
   useEffect(() => {
     if (settings?.theme && settings.theme !== theme) setTheme(settings.theme);
   }, [settings?.theme, setTheme, theme]);
+
+  // Mantém a leitura no mesmo ponto quando o PWA só fica em segundo plano.
+  // A posição vive apenas em memória: se o Valune for fechado de verdade, ela
+  // some e a próxima abertura continua indo para o Início.
+  useEffect(() => {
+    let scrollFrame = 0;
+    const restoreTimers: number[] = [];
+
+    const saveScrollPosition = () => {
+      lastScrollYRef.current = window.scrollY;
+    };
+    const handleScroll = () => {
+      window.cancelAnimationFrame(scrollFrame);
+      scrollFrame = window.requestAnimationFrame(saveScrollPosition);
+    };
+    const restoreScrollPosition = () => {
+      if (document.visibilityState !== "visible") return;
+      const restore = () => window.scrollTo({ top: lastScrollYRef.current, left: 0, behavior: "instant" });
+      window.requestAnimationFrame(restore);
+      restoreTimers.push(window.setTimeout(restore, 120));
+      restoreTimers.push(window.setTimeout(restore, 350));
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") saveScrollPosition();
+      else restoreScrollPosition();
+    };
+
+    saveScrollPosition();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.cancelAnimationFrame(scrollFrame);
+      restoreTimers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
 
   if (authLoading || (user && profileLoading) || !user || !profile?.onboarding_completed) {
     return (
