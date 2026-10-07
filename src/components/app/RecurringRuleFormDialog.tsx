@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -193,11 +194,11 @@ export function RecurringRuleFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="recurring-next-date">{isSubscription ? "Próxima cobrança" : "Primeira ocorrência"}</Label>
-              <Input id="recurring-next-date" type="date" required value={nextOccurrence} onChange={(event) => setNextOccurrence(event.target.value)} />
+              <DateInput id="recurring-next-date" required value={nextOccurrence} onChange={(event) => setNextOccurrence(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="recurring-end-date">Até quando (opcional)</Label>
-              <Input id="recurring-end-date" type="date" min={nextOccurrence} value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+              <DateInput id="recurring-end-date" min={nextOccurrence} value={endDate} onChange={(event) => setEndDate(event.target.value)} />
             </div>
           </div>
 

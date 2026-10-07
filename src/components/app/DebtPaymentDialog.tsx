@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Account } from "@/hooks/useAccounts";
@@ -94,7 +95,7 @@ export function DebtPaymentDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="debt-payment-date">Data</Label>
-            <Input id="debt-payment-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+            <DateInput id="debt-payment-date" value={date} onChange={(event) => setDate(event.target.value)} />
           </div>
           <div className="flex items-start gap-3 rounded-lg border p-3">
             <Checkbox id="debt-payment-historical" checked={isHistorical} onCheckedChange={(checked) => setIsHistorical(checked === true)} />

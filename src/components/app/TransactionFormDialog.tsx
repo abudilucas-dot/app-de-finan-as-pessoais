@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -246,9 +247,8 @@ export function TransactionFormDialog({
             </div>
             <div className="min-w-0 space-y-2">
               <Label htmlFor="transaction-date">Data</Label>
-              <Input
+              <DateInput
                 id="transaction-date"
-                type="date"
                 required
                 value={date}
                 onChange={(event) => setDate(event.target.value)}

@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -99,9 +100,8 @@ export function InvoicePaymentDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoice-payment-date">Data do pagamento</Label>
-            <Input
+            <DateInput
               id="invoice-payment-date"
-              type="date"
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
             />

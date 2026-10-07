@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { useCreateGoal, useUpdateGoal } from "@/hooks/useGoals";
 import type { GoalSummary } from "@/lib/goals";
@@ -74,7 +75,7 @@ export function GoalFormDialog({
           <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
             <div className="space-y-2">
               <Label htmlFor="goal-date">Prazo (opcional)</Label>
-              <Input id="goal-date" type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} />
+              <DateInput id="goal-date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="goal-color">Cor</Label>

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -191,9 +192,8 @@ export function CardExpenseDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="card-expense-date">Data da compra</Label>
-              <Input
+              <DateInput
                 id="card-expense-date"
-                type="date"
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}

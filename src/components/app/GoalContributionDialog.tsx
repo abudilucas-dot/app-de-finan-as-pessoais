@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Account } from "@/hooks/useAccounts";
@@ -85,7 +86,7 @@ export function GoalContributionDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="contribution-date">Data</Label>
-            <Input id="contribution-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+            <DateInput id="contribution-date" value={date} onChange={(event) => setDate(event.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Conta de origem (opcional)</Label>

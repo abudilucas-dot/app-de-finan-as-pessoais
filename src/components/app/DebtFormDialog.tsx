@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { useCreateDebt, useUpdateDebt } from "@/hooks/useDebts";
 import type { DebtSummary } from "@/lib/debts";
@@ -132,7 +133,7 @@ export function DebtFormDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="debt-date">Próximo vencimento</Label>
-              <Input id="debt-date" type="date" value={nextDueDate} onChange={(event) => setNextDueDate(event.target.value)} />
+              <DateInput id="debt-date" value={nextDueDate} onChange={(event) => setNextDueDate(event.target.value)} />
             </div>
           </div>
           <div className="space-y-2">

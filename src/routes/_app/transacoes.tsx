@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import {
   Select,
   SelectContent,
@@ -481,8 +482,7 @@ function TransactionsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>De</span>
-                <Input
-                  type="date"
+                <DateInput
                   value={startDate}
                   max={endDate || undefined}
                   onChange={(event) => setStartDate(event.target.value)}
@@ -491,8 +491,7 @@ function TransactionsPage() {
               </label>
               <label className="min-w-0 space-y-1.5 text-sm font-medium">
                 <span>Até</span>
-                <Input
-                  type="date"
+                <DateInput
                   value={endDate}
                   min={startDate || undefined}
                   onChange={(event) => setEndDate(event.target.value)}
