@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { AppHeader } from "@/components/app/AppHeader";
+import { AppResumeManager } from "@/components/app/AppResumeManager";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { BillingAccessGate } from "@/components/app/BillingAccessGate";
 import { MobileNavigation } from "@/components/app/MobileNavigation";
@@ -48,6 +49,7 @@ function PrivateAppLayout() {
   return (
     <BillingAccessGate>
       <div className="flex min-h-screen bg-background">
+        <AppResumeManager />
         <AppSidebar />
         <div className="min-w-0 flex-1">
           <AppHeader />
